@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUAL STACK v1.2 — 온라인 1대1 테트리스</title>
+<style>
+:root{color-scheme:dark;--bg:#070c18;--surface:#121b2d;--border:#263650;--text:#edf4ff;--muted:#869bb4;--cyan:#37d4f0;--pink:#fb5f9f}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);font-family:Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif;color:var(--text)}body{background:radial-gradient(ellipse at 20% -10%,#17314d 0%,transparent 40%),radial-gradient(ellipse at 85% 15%,#2d193f 0%,transparent 35%),#070c18}
+button,input{font:inherit}button{cursor:pointer}button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid #80dfff;outline-offset:3px}
+.shell{max-width:1390px;margin:0 auto;padding:20px 23px 40px}.mast{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}.eyebrow{color:#7998b6;font-size:10px;font-weight:800;letter-spacing:4px}.brand{font-size:clamp(24px,2.6vw,36px);line-height:1;font-weight:950;letter-spacing:-1.7px}.brand span{color:var(--cyan)}.brand b{color:var(--pink)}.brand small{font-size:12px;font-weight:600;color:#8fa5be;letter-spacing:2px;margin-left:13px;vertical-align:middle}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{border:1px solid #40516d;color:#d8e5f6;background:#17253c;border-radius:9px;padding:9px 14px;font-size:12px;font-weight:800;transition:background .15s,transform .12s}.btn:hover{background:#273c59}.btn:active{transform:scale(.97)}.btn.primary{border-color:#79eaff;background:#36c9e8;color:#071322}.btn.primary:hover{background:#92f0ff}.btn:disabled{cursor:default;opacity:.4}.soundbtn{width:37px;padding:9px}
+.match{display:grid;grid-template-columns:1fr 170px 1fr;gap:12px;align-items:center;background:linear-gradient(90deg,#10243a,#111827 47%,#28192d);padding:14px 18px;border:1px solid #28364c;border-radius:14px;margin-bottom:18px}.team{display:flex;align-items:center;gap:12px}.team.right{flex-direction:row-reverse}.team strong{font-size:15px;white-space:nowrap}.team .tag{font-size:9px;color:var(--muted);letter-spacing:2px}.team.right{text-align:right}.dot{width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 18px var(--cyan)}.right .dot{background:var(--pink);box-shadow:0 0 18px var(--pink)}.points{display:flex;gap:5px;margin-left:auto}.right .points{margin-left:0;margin-right:auto}.point{height:19px;width:19px;border:1px solid #456078;border-radius:5px;background:#0c1728}.point.p1{background:#30beda;box-shadow:0 0 13px #30beda65;border-color:#30beda}.point.p2{background:#ee4e90;box-shadow:0 0 13px #ee4e9065;border-color:#ee4e90}.middle{text-align:center}.middle .mode{color:#91a1b8;font-size:10px;font-weight:800;letter-spacing:2px}.middle .clock{font-size:25px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums}.middle .round{color:#7f90ac;font-size:10px}
+.arena{display:grid;grid-template-columns:minmax(0,1fr) 88px minmax(0,1fr);gap:12px;align-items:start}.player{padding:15px;background:#101a2bca;border:1px solid #29415d;border-radius:13px;min-width:0;position:relative;overflow:hidden}.player.two{border-color:#54304e}.player-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.player-head .name{font-size:15px;font-weight:900;letter-spacing:.4px}.name.p1{color:#50d7ed}.name.p2{color:#ff83b8}.pill{font-size:10px;color:#92a6bf;background:#182740;border:1px solid #31415a;border-radius:50px;padding:5px 8px}.station{display:grid;grid-template-columns:82px minmax(0,1fr) 82px;gap:10px;align-items:start}.side{min-width:0}.sidetitle{color:#71869c;font-weight:800;font-size:10px;letter-spacing:2px;margin:3px 0 8px}.preview{background:#0a1323;border:1px solid #22334b;border-radius:7px;display:block;width:100%;height:auto}.next-preview{margin-bottom:7px}.board-wrap{position:relative;min-width:0;background:#090f1e;border:2px solid #32475e;box-shadow:0 7px 35px #0007, inset 0 0 30px #01040a;overflow:hidden}.player.two .board-wrap{border-color:#6b3d5b}.board{width:100%;height:auto;display:block;image-rendering:auto;aspect-ratio:1/2}.garbage-bar{position:absolute;top:0;right:0;width:7px;height:100%;pointer-events:none;display:flex;justify-content:end;align-items:end}.garbage-fill{width:100%;height:0%;background:linear-gradient(0deg,#fa5664,#fcad48);box-shadow:0 0 10px #f95658;transition:height .13s}.board-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:#070e1dd4;text-align:center;pointer-events:none;opacity:0;transition:opacity .14s}.board-overlay.show{opacity:1}.board-overlay .huge{font-size:clamp(26px,3vw,47px);font-weight:1000;line-height:1.1;text-shadow:0 4px 15px #000a}.board-overlay .hint{color:#9eb2c9;font-size:11px}.board-overlay.win{background:#061b22bd}.board-overlay.loss{background:#21101bc9}.event{margin-top:14px;font-size:11px;line-height:1.2;font-weight:900;min-height:29px;color:#d6e9ff;text-align:center;letter-spacing:.4px}.event .sub{color:#7f9caf;display:block;font-size:10px;font-weight:650;margin-top:4px}.smallstat{margin-top:12px;border-top:1px solid #243650;padding-top:13px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.smallstat div{text-align:center}.smallstat b{font-size:17px;font-variant-numeric:tabular-nums;display:block}.smallstat span{font-size:9px;color:#8093a9;letter-spacing:1px;font-weight:800}.side-number{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}.note{font-size:10px;color:#7587a0;line-height:1.5}.surge{font-size:11px;font-weight:900;line-height:1.5;color:#ffbb69;margin-top:10px}.meter{height:5px;background:#1c293d;border-radius:9px;margin-top:7px;overflow:hidden}.meter>div{height:100%;width:0;background:linear-gradient(90deg,#f7874c,#ffd668);transition:width .15s}.versus{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;min-height:600px}.vsmark{font-weight:1000;letter-spacing:-3px;font-size:30px;color:#a3b4c9;text-shadow:0 0 22px #8acaff44}.vsline{height:140px;width:1px;background:linear-gradient(transparent,#36556c,transparent)}.versus .clash{font-size:10px;text-align:center;color:#6a849c;line-height:1.7;letter-spacing:1px}.feed{display:flex;align-items:center;flex-direction:column;gap:9px;width:100%;max-height:150px;overflow:hidden}.feed-item{width:100%;text-align:center;white-space:nowrap;background:#17233a;padding:7px 2px;border:1px solid #293a53;border-radius:7px;font-size:10px;color:#9bacbf}.feed-item strong{color:#ffe0ae}
+.bottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}.help,.options{background:#101a2ac9;border:1px solid #283950;border-radius:12px;padding:15px 17px}.help h3,.options h3{margin:0 0 12px;color:#c6d9eb;font-size:12px;letter-spacing:1px}.keys{display:grid;grid-template-columns:1fr 1fr;gap:18px}.key-title{font-size:11px;font-weight:900;margin-bottom:8px;color:var(--cyan)}.key-title.two{color:var(--pink)}.keyrow{display:grid;grid-template-columns:90px 1fr;align-items:center;gap:6px;padding:4px 0;color:#9eb0c8;font-size:10px}.keycaps{display:flex;gap:3px;flex-wrap:wrap}.keycap{border:1px solid #3b5167;border-bottom:2px solid #415a75;background:#1a2940;min-width:23px;text-align:center;border-radius:4px;padding:3px 5px;color:#e0ecf9;font-size:10px;font-weight:850}.options details summary{color:#c4d6ed;font-size:12px;font-weight:900;cursor:pointer}.options p{font-size:11px;color:#899eb4;line-height:1.65}.settings-controls{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}.setting{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:#a4b8cd}.setting strong{color:#e7edf8}.setting input{accent-color:#5dd7ee;width:100%}.settings-foot{font-size:10px;color:#788da5}.setting-explain{font-size:10px;color:#8398ae;font-weight:500;line-height:1.4}.setting-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:15px}.setting-bottom .btn{padding:6px 9px;font-size:10px}.footer{font-size:10px;color:#607893;line-height:1.7;margin-top:17px;text-align:center}.mobile-warning{display:none;color:#e1ba6c;text-align:center;font-size:11px;margin:12px 0}
+@media(max-width:1170px){.shell{width:1170px;max-width:none}.mobile-warning{display:block}body{overflow-x:auto}}@media(max-width:700px){.bottom{grid-template-columns:1fr}.match{gap:6px}.brand small{display:none}}
+
+.online-panel{background:#111f32;border:1px solid #345171;border-radius:12px;padding:13px 16px;margin:0 0 16px}.online-grid{display:grid;grid-template-columns:minmax(240px,1.9fr) minmax(110px,.75fr) auto auto auto;gap:8px;align-items:end}.field{display:flex;flex-direction:column;gap:5px;font-size:10px;font-weight:800;color:#8ca4bf}.field input{background:#071322;border:1px solid #39516b;color:#e9f7ff;border-radius:7px;padding:9px 10px;height:36px;min-width:0}.online-status{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:11px;color:#a8c4d9;margin-top:10px}.online-status strong{color:#77e4f7;letter-spacing:1.5px}.match{grid-template-columns:1fr 140px 1fr}@media(max-width:1170px){.online-grid{grid-template-columns:1fr 1fr 1fr}.online-grid>.field:first-child{grid-column:span 3}}@media(max-width:650px){.online-grid{grid-template-columns:1fr 1fr}.online-grid>.field:first-child{grid-column:span 2}}
+</style>
+</head>
+<body><main class="shell">
+<header class="mast"><div><div class="eyebrow">ONLINE VERSUS · TWO COMPUTERS</div><div class="brand">DUAL<span>STACK</span><b>.</b><small>ONLINE 1V1</small></div></div><div class="actions"><button class="btn primary" id="startBtn" disabled>준비 완료</button><button class="btn soundbtn" id="soundBtn" aria-label="사운드 켜기 또는 끄기" title="사운드">♪</button></div></header>
+<section class="online-panel"><div class="online-grid"><label class="field">서버 주소<input type="url" id="serverUrl" placeholder="https://dual-stack-online.계정.workers.dev" spellcheck="false"></label><label class="field">방 코드<input type="text" id="roomInput" placeholder="6자리 코드" maxlength="6" autocapitalize="characters" spellcheck="false"></label><button class="btn primary" id="createRoom">방 만들기</button><button class="btn" id="joinRoom">방 참가</button><button class="btn" id="copyInvite" disabled>초대 링크 복사</button></div><div class="online-status"><span id="netStatus">서버 주소를 넣고 방을 만들거나 참가해 줘.</span><strong id="roomDisplay"></strong></div></section>
+<div class="match"><div class="team"><span class="dot"></span><div><div class="tag">CHALLENGER 01</div><strong>ME</strong></div><div class="points" id="score1"></div></div><div class="middle"><div class="mode">FIRST TO 3</div><div class="clock" id="clock">00:00</div><div class="round" id="roundText">ROUND 1 · READY</div></div><div class="team right"><span class="dot"></span><div><div class="tag">CHALLENGER 02</div><strong>OPPONENT</strong></div><div class="points" id="score2"></div></div></div>
+<div class="arena">
+<section class="player one"><div class="player-head"><div class="name p1">01 / YOU</div><div class="pill">내 게임</div></div><div class="station"><div class="side"><div class="sidetitle">HOLD</div><canvas class="preview" id="hold0" width="132" height="112"></canvas><div class="sidetitle" style="margin-top:17px">ATTACK</div><div class="side-number" id="attack0">0</div><div class="note">전송한 줄</div><div class="sidetitle" style="margin-top:17px">INCOMING</div><div class="side-number" id="incoming0">0</div><div class="note">대기 가비지</div><div class="surge" id="surge0"></div></div><div class="board-wrap"><canvas class="board" id="board0" width="300" height="600"></canvas><div class="garbage-bar"><div class="garbage-fill" id="garbage0"></div></div><div class="board-overlay show" id="overlay0"><div class="huge">READY</div><div class="hint">대전 시작을 눌러줘</div></div></div><div class="side"><div class="sidetitle">NEXT</div><div id="next0"></div></div></div><div class="event" id="event0">7-BAG · HOLD · SRS+<span class="sub">공격을 보내 상대를 압박해</span></div><div class="smallstat"><div><b id="lines0">0</b><span>LINES</span></div><div><b id="pps0">0.00</b><span>PPS</span></div><div><b id="apm0">0</b><span>APM</span></div><div><b id="b2b0">0</b><span>B2B</span></div></div></section>
+<div class="versus"><div class="vsline"></div><div class="vsmark">VS</div><div class="feed" id="feed"></div><div class="clash">ATTACK<br>↔<br>COUNTER</div><div class="vsline"></div></div>
+<section class="player two"><div class="player-head"><div class="name p2">02 / OPPONENT</div><div class="pill">상대 화면</div></div><div class="station"><div class="side"><div class="sidetitle">HOLD</div><canvas class="preview" id="hold1" width="132" height="112"></canvas><div class="sidetitle" style="margin-top:17px">ATTACK</div><div class="side-number" id="attack1">0</div><div class="note">전송한 줄</div><div class="sidetitle" style="margin-top:17px">INCOMING</div><div class="side-number" id="incoming1">0</div><div class="note">대기 가비지</div><div class="surge" id="surge1"></div></div><div class="board-wrap"><canvas class="board" id="board1" width="300" height="600"></canvas><div class="garbage-bar"><div class="garbage-fill" id="garbage1"></div></div><div class="board-overlay show" id="overlay1"><div class="huge">READY</div><div class="hint">대전 시작을 눌러줘</div></div></div><div class="side"><div class="sidetitle">NEXT</div><div id="next1"></div></div></div><div class="event" id="event1">7-BAG · HOLD · SRS+<span class="sub">공격을 보내 상대를 압박해</span></div><div class="smallstat"><div><b id="lines1">0</b><span>LINES</span></div><div><b id="pps1">0.00</b><span>PPS</span></div><div><b id="apm1">0</b><span>APM</span></div><div><b id="b2b1">0</b><span>B2B</span></div></div></section>
+</div>
+<div class="bottom"><section class="help"><h3>KEYBOARD / 내 화면만 조작</h3><div class="keyrow"><span>이동</span><div class="keycaps"><span class="keycap">←</span><span class="keycap">→</span></div></div><div class="keyrow"><span>소프트 드롭</span><div class="keycaps"><span class="keycap">↓</span></div></div><div class="keyrow"><span>하드 드롭</span><div class="keycaps"><span class="keycap">SPACE</span></div></div><div class="keyrow"><span>회전</span><div class="keycaps"><span class="keycap">Z</span><span class="keycap">X</span><span class="keycap">↑</span><span class="keycap">A (180°)</span></div></div><div class="keyrow"><span>홀드</span><div class="keycaps"><span class="keycap">C</span><span class="keycap">SHIFT</span></div></div></section><section class="options"><h3>VERSUS RULESET</h3><p>각자의 PC에서 참가 · 6자리 방 코드 · 준비 완료 후 동시 시작 · 3선승 · 7-Bag · 홀드 · 고스트 · SRS+ 벽차기 · All-Mini+ 스핀 · 콤보 · B2B Charging / Surge · Perfect Clear · 가비지 상쇄·지연.</p><details id="config"><summary>조작 감도 설정 (TETR.IO 방식)</summary><div class="settings-controls">
+<label class="setting">DAS <strong id="dasVal">6.5F</strong><input id="das" type="range" min="0" max="20" step="0.5" value="6.5"><span class="setting-explain">자동 좌우 이동이 시작되기까지</span></label>
+<label class="setting">ARR <strong id="arrVal">1F</strong><input id="arr" type="range" min="0" max="10" step="0.5" value="1"><span class="setting-explain">자동 이동 반복 간격 · 0F는 즉시 벽까지</span></label>
+<label class="setting">DCD <strong id="dcdVal">0F</strong><input id="dcd" type="range" min="0" max="12" step="1" value="0"><span class="setting-explain">회전·새 블록 등장 직후 반복 이동 중단</span></label>
+<label class="setting">SDF <strong id="sdfVal">20×</strong><input id="sdf" type="range" min="1" max="41" step="1" value="20"><span class="setting-explain">41 = ∞ 소닉 드롭 (고정하지 않고 바닥 이동)</span></label>
+</div><div class="setting-bottom"><span id="settingSaved" class="settings-foot">브라우저에 자동 저장 · 1F ≈ 16.67ms (60Hz 기준)</span><button class="btn" type="button" id="resetHandling">기본값 복원</button></div>
+<p class="settings-foot">현재 All-Mini+ 판정 · I블록은 SRS+ 킥 사용. 일부 공격 수식과 180° 킥은 원본 TETR.IO와 차이가 있을 수 있어.</p></details></section></div><div class="footer">온라인 1:1 전용 팬 프로젝트 · 서버가 방과 승패·가비지를 중계 · 로컬 2인용 모드 없음 · 경기 엔진은 클라이언트 실행 방식</div>
+</main>
+<script>
+(()=>{'use strict';
+const W=10,H=40,V=20,CELL=30,TYPES=['I','J','L','O','S','T','Z'];
+const COLORS={I:'#37d4ed',J:'#4a8cff',L:'#ffb34b',O:'#ffe15b',S:'#59df93',T:'#bb77ff',Z:'#ff6588',G:'#58647a'};
+const PIECES={
+ I:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+ J:[[1,0,0],[1,1,1],[0,0,0]],L:[[0,0,1],[1,1,1],[0,0,0]],
+ O:[[0,1,1,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]],
+ S:[[0,1,1],[1,1,0],[0,0,0]],T:[[0,1,0],[1,1,1],[0,0,0]],
+ Z:[[1,1,0],[0,1,1],[0,0,0]]};
+// 회전 킥은 SRS 표의 y+ 위쪽 좌표로 기록하고 실제 사용시 부호를 뒤집는다.
+const JL_KICKS={
+ '0>1':[[0,0],[-1,0],[-1,1],[0,-2],[-1,-2]],
+ '1>0':[[0,0],[1,0],[1,-1],[0,2],[1,2]],
+ '1>2':[[0,0],[1,0],[1,-1],[0,2],[1,2]],
+ '2>1':[[0,0],[-1,0],[-1,1],[0,-2],[-1,-2]],
+ '2>3':[[0,0],[1,0],[1,1],[0,-2],[1,-2]],
+ '3>2':[[0,0],[-1,0],[-1,-1],[0,2],[-1,2]],
+ '3>0':[[0,0],[-1,0],[-1,-1],[0,2],[-1,2]],
+ '0>3':[[0,0],[1,0],[1,1],[0,-2],[1,-2]]};
+// TETR.IO SRS+의 대칭 I-block 90° 킥. y는 위쪽이 +인 좌표계.
+const I_KICKS={
+ '0>1':[[0,0],[1,0],[-2,0],[-2,-1],[1,2]],
+ '1>0':[[0,0],[-1,0],[2,0],[-1,-2],[2,1]],
+ '1>2':[[0,0],[-1,0],[2,0],[-1,2],[2,-1]],
+ '2>1':[[0,0],[-2,0],[1,0],[-2,1],[1,-2]],
+ '2>3':[[0,0],[2,0],[-1,0],[2,1],[-1,-2]],
+ '3>2':[[0,0],[1,0],[-2,0],[1,2],[-2,-1]],
+ '3>0':[[0,0],[1,0],[-2,0],[1,-2],[-2,1]],
+ '0>3':[[0,0],[-1,0],[2,0],[2,-1],[-1,2]]};
+// 원본의 모든 180도 전이 표를 복제한 것은 아니며 주요 킥을 재현하는 근사 테이블.
+const KICKS180=[[0,0],[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1],[2,0],[-2,0],[1,-1],[-1,-1]];
+const KEYMAP=[{
+ ArrowLeft:'left',ArrowRight:'right',ArrowDown:'soft',Space:'hard',KeyZ:'ccw',KeyX:'cw',ArrowUp:'cw',KeyA:'flip',KeyC:'hold',ShiftLeft:'hold',ShiftRight:'hold',ControlLeft:'ccw'
+},{KeyJ:'left',KeyL:'right',KeyK:'soft',KeyI:'hard',KeyU:'ccw',KeyO:'cw',KeyP:'flip',KeyH:'hold'}];
+const el=id=>document.getElementById(id);
+const boardCanvas=[el('board0'),el('board1')],boardCtx=boardCanvas.map(c=>c.getContext('2d'));
+const holdC=[el('hold0'),el('hold1')];
+const nextC=[0,1].map(i=>{const holder=el('next'+i),arr=[];for(let k=0;k<5;k++){const c=document.createElement('canvas');c.width=132;c.height=95;c.className='preview next-preview';holder.appendChild(c);arr.push(c);}return arr;});
+// TETR.IO 감도 UI의 DAS/ARR/DCD는 프레임 단위, 엔진 내부에서는 ms 단위.
+// 영구 저장은 사용자별 브라우저 localStorage에만 기록하고 서버에는 보내지 않는다.
+const FRAME_MS=1000/60, HANDLING_KEY='dualstack_handling_v12';
+const handlingDefault={das:6.5,arr:1,dcd:0,sdf:20};
+let handling={...handlingDefault};
+try{const saved=JSON.parse(localStorage.getItem(HANDLING_KEY)||'null');if(saved&&typeof saved==='object')for(const k of Object.keys(handlingDefault)){const n=Number(saved[k]);const slider=el(k);if(Number.isFinite(n)&&n>=Number(slider.min)&&n<=Number(slider.max))handling[k]=n;}}catch{}
+const config={das:handling.das*FRAME_MS,arr:handling.arr*FRAME_MS,dcd:handling.dcd*FRAME_MS,sdf:handling.sdf,delay:600};
+function fmtHandling(k){const n=handling[k];if(k==='sdf')return n===41?'∞ (INSTANT)':n+'×';return n+'F · '+Math.round(n*FRAME_MS)+'ms';}
+function updateHandlingUi(){for(const k of Object.keys(handlingDefault)){el(k).value=handling[k];el(k+'Val').textContent=fmtHandling(k);}}
+function saveHandling(){try{localStorage.setItem(HANDLING_KEY,JSON.stringify(handling));el('settingSaved').textContent='설정 저장됨 · 1F ≈ 16.67ms (60Hz 기준)';}catch{el('settingSaved').textContent='설정 저장 불가 · 현재 탭에는 적용됨';}}
+for(const k of Object.keys(handlingDefault)){el(k).addEventListener('input',e=>{handling[k]=Number(e.target.value);config[k]=k==='sdf'?handling[k]:handling[k]*FRAME_MS;updateHandlingUi();saveHandling();});}
+el('resetHandling').onclick=()=>{handling={...handlingDefault};for(const k of Object.keys(handling))config[k]=k==='sdf'?handling[k]:handling[k]*FRAME_MS;updateHandlingUi();saveHandling();};
+updateHandlingUi();
+let sound=false,audio=null;el('soundBtn').onclick=()=>{sound=!sound;el('soundBtn').style.color=sound?'#5ff0ff':'';el('soundBtn').title=sound?'사운드 켜짐':'사운드 꺼짐';};
+function beep(freq=380,len=.065,type='sine',gain=.04){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(gain,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+len);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+len);}catch{}}
+function rotateMat(m,dir){if(dir===2)return rotateMat(rotateMat(m,1),1);const n=m.length,r=Array.from({length:n},()=>Array(n).fill(0));for(let y=0;y<n;y++)for(let x=0;x<n;x++)r[dir===1?x:n-1-x][dir===1?n-1-y:y]=m[y][x];return r;}
+function shuffleBag(){const a=[...TYPES];for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]];}return a;}
+function newPlayer(i){return {i,grid:Array.from({length:H},()=>Array(W).fill(null)),queue:[],hold:null,holdUsed:false,piece:null,fallen:0,combo:-1,b2b:0,surge:0,lines:0,sent:0,blocked:0,pieces:0,spins:0,incoming:[],garbageHole:Math.floor(Math.random()*W),dead:false,event:'READY',sub:'',eventUntil:0,lastLock:0,moved:0,gravity:0,groundAt:0,lockResets:0,dcdUntil:0,repeat:{left:{at:0,last:0,done:false},right:{at:0,last:0,done:false}},held:{left:false,right:false,soft:false},glow:0};}
+let players=[newPlayer(0),newPlayer(1)],wins=[0,0],round=1,status='ready',roundStart=0,countdownAt=0,clockTime=0,feed=[];
+let ws=null, room='',seat=-1, connected=false, readySent=false, gameStartTime=0, workerBase='', lastSnapshot=0;
+// Send a compact, changed snapshot at most once per ~85ms.
+let lastStateSignature='', lastGridDigest='', lastWireSent=Date.now();
+const networkStats={stateMessages:0,stateBytes:0,totalMessages:0,pings:0};
+const heldKeys=new Set();
+const urlParams=new URLSearchParams(location.search);
+const generateToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
+const sessionToken=sessionStorage.getItem('dualstack_session')||generateToken();
+sessionStorage.setItem('dualstack_session',sessionToken);
+const statusLine=(message)=>{el('netStatus').textContent=message;};
+function getBase(){let raw=el('serverUrl').value.trim().replace(/\/+$/,'');if(raw.startsWith('wss://'))raw='https://'+raw.slice(6);if(raw.startsWith('ws://'))raw='http://'+raw.slice(5);try{const u=new URL(raw);if(!['http:','https:'].includes(u.protocol))throw Error();if(u.protocol==='http:'&&!['127.0.0.1','localhost'].includes(u.hostname))throw Error();return u.origin;}catch{throw Error('https://로 시작하는 Workers 서버 주소를 입력해 줘.');}}
+function linkToRoom(){return location.href.split('?')[0].split('#')[0]+'?room='+encodeURIComponent(room)+'&server='+encodeURIComponent(workerBase);}
+function updateRoom(){el('roomDisplay').textContent=room?'ROOM  '+room:'';el('copyInvite').disabled=!room;el('startBtn').disabled=!(connected&&['lobby','over'].includes(status)&&playersConnected()&&!readySent)||status==='countdown';el('startBtn').textContent=readySent?'상대 준비 대기':status==='over'?'다음 라운드 준비':'준비 완료';}
+let presence=[false,false];
+function playersConnected(){return presence[0]&&presence[1];}
+function send(type,data={}){
+ if(ws?.readyState!==WebSocket.OPEN)return false;
+ if(type==='state'&&ws.bufferedAmount>16000)return false; // drop obsolete visuals, never attacks
+ const payload=JSON.stringify({type,...data});
+ ws.send(payload);lastWireSent=Date.now();networkStats.totalMessages++;
+ if(type==='state'){networkStats.stateMessages++;networkStats.stateBytes+=new TextEncoder().encode(payload).length;}
+ return true;
+}
+// Cloudflare responds to this application-level ping without waking the room.
+// Browsers cannot send protocol-level Ping frames directly.
+setInterval(()=>{
+ if(ws?.readyState===WebSocket.OPEN&&Date.now()-lastWireSent>=22000){
+  ws.send('ping');lastWireSent=Date.now();networkStats.pings++;
+ }
+},20000);
+function resetInputs(){heldKeys.clear();for(const p of players){p.held={left:false,right:false,soft:false};}}
+async function createRoom(){try{workerBase=getBase();statusLine('방 생성 중…');const res=await fetch(workerBase+'/api/create',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:sessionToken})});const data=await res.json();if(!res.ok)throw Error(data.error||'서버 오류');room=data.code;el('roomInput').value=room;localStorage.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('방 생성 실패: '+e.message);}}
+async function joinRoom(){try{workerBase=getBase();room=el('roomInput').value.trim().toUpperCase();if(!/^[A-HJ-NP-Z2-9]{6}$/.test(room))throw Error('올바른 6자리 방 코드를 입력해 줘.');statusLine('방 확인 중…');const res=await fetch(workerBase+'/api/check/'+room);const data=await res.json();if(!res.ok)throw Error(data.error||'방 확인 실패');localStorage.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('참가 실패: '+e.message);}}
+function connectRoom(){if(ws){try{ws.close(1000,'Changing room');}catch{}}connected=false;readySent=false;presence=[false,false];status='lobby';resetInputs();const endpoint=workerBase.replace(/^http/,'ws')+'/api/ws/'+room+'?token='+encodeURIComponent(sessionToken);const socket=new WebSocket(endpoint);ws=socket;statusLine('서버 연결 중…');updateRoom();socket.addEventListener('open',()=>{if(ws!==socket)return;connected=true;statusLine('접속 성공 · 상대를 기다리는 중');updateRoom();});socket.addEventListener('message',e=>{if(ws!==socket)return;let msg;try{msg=JSON.parse(e.data);}catch{return;}onNetwork(msg);});socket.addEventListener('close',e=>{if(ws!==socket)return;connected=false;presence=[false,false];readySent=false;status='lobby';resetInputs();statusLine('연결 종료 ('+e.code+') · 방 코드를 다시 입력해 참가할 수 있어.');setOverlay(0,'OFFLINE','서버와 연결이 종료됐어');setOverlay(1,'OFFLINE','상대 연결 끊김');updateRoom();});socket.addEventListener('error',()=>{if(ws===socket)statusLine('연결 오류 · Workers 서버 주소를 확인해 줘.');});}
+function startRound(msg){lastStateSignature='';lastGridDigest='';lastSnapshot=0;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;status='countdown';readySent=false;clockTime=0;feed=[];el('feed').innerHTML='';players=[newPlayer(0),newPlayer(1)];resetInputs();queueFill(players[1]);spawn(players[0]);setOverlay(0,'3','준비');setOverlay(1,'3','상대 준비');gameStartTime=performance.now()+2300;countdownAt=performance.now();el('roundText').textContent='ROUND '+round+' · COUNTDOWN';updateScore();updateRoom();}
+function onNetwork(msg){
+ if(msg.type==='welcome'){seat=msg.seat;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;updateScore();statusLine('플레이어 '+(seat+1)+' 참가 완료 · 상대를 기다리는 중');}
+ if(msg.type==='presence'){if(seat<0)return;presence=msg.players;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];updateScore();if(msg.phase==='lobby'){status='lobby';setOverlay(0,'WAITING','두 사람이 준비하면 시작');setOverlay(1,'WAITING',playersConnected()?'상대 준비 대기':'상대 입장 대기');statusLine(playersConnected()?'상대 접속 완료 · 준비 완료 버튼을 눌러 줘.':'방에 접속했어 · 초대 링크를 공유해 줘.');}else if(msg.phase==='over'&&status!=='over'){status='over';}else if(msg.phase==='countdown'&&status==='lobby'){statusLine('곧 시작해.');}else if(msg.phase==='running'&&status==='lobby'){statusLine('진행 중인 경기야. 다시 시작하려면 상대와 재접속해 줘.');}updateRoom();}
+ if(msg.type==='start'){startRound(msg);statusLine('양쪽 모두 준비 완료 · 카운트다운');}
+ if(msg.type==='go'&&status==='countdown'){startPlaying(performance.now());}
+ if(msg.type==='state'&&['running','countdown'].includes(status)){
+  const d=msg.state,p=players[1];if(!d||!Array.isArray(d.p)&&d.p!==null)return;
+  if(Array.isArray(d.g)&&d.g.length===H)p.grid=d.g.map(row=>[...row].map(ch=>ch==='.'?null:ch));
+  if(d.p){const [type,rot,x,y]=d.p;let m=PIECES[type]?.map(row=>row.slice());if(m){for(let i=0;i<rot;i++)m=rotateMat(m,1);p.piece={type,m,rot,x,y};}}
+  else p.piece=null;
+  const changedPreview=p.hold!==(d.h||null)||p.queue.slice(0,7).join('')!==d.q;
+  p.hold=d.h||null;p.queue=[...d.q];p.lines=d.l||0;p.pieces=d.n||0;p.sent=d.s||0;p.b2b=d.b||0;p.surge=d.u||0;p.incoming=[{lines:d.i||0}];
+  const nextEvent=d.e||'';if(nextEvent!==p.event)p.eventUntil=nextEvent?performance.now()+1600:0;
+  p.event=nextEvent;p.sub=d.d||'';p.dead=!!d.x;
+  if(changedPreview)renderMini(p);
+ }
+ if(msg.type==='garbage'&&status==='running'){
+   const now=performance.now();players[0].incoming.push({lines:msg.lines,hole:msg.hole,arrive:now+333,active:now+333+config.delay});
+   addFeed('<strong>OPP</strong> ATTACK +'+msg.lines);
+ }
+ if(msg.type==='roundEnd'){
+   status='over';resetInputs();readySent=false;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;
+   const mine=msg.winner===seat;
+   setOverlay(0,mine?'WIN':'TOP OUT',mine?'라운드 승리':'패배',true,mine?'win':'loss');
+   setOverlay(1,mine?'TOP OUT':'WIN',mine?'상대 패배':'상대 승리',true,mine?'loss':'win');
+   el('roundText').textContent=msg.matchOver?(mine?'MATCH WINNER':'MATCH LOST'):'ROUND '+round+' · '+(mine?'WIN':'LOSS');
+   statusLine(msg.matchOver?'매치 종료 · 양쪽 모두 준비하면 새 대전':'라운드 종료 · 양쪽 모두 준비하면 다음 라운드');updateScore();updateRoom();
+ }
+ if(msg.type==='interrupted'){status='lobby';readySent=false;resetInputs();wins=[0,0];round=1;updateScore();setOverlay(0,'CANCELLED','상대 연결 종료');setOverlay(1,'OFFLINE','다른 플레이어를 기다려 줘.');statusLine(msg.message||'연결 종료');updateRoom();}
+}
+function startPlaying(now){status='running';roundStart=now;hideOverlay(0);hideOverlay(1);el('roundText').textContent='ROUND '+round+' · PLAYING';statusLine('대전 중 · 내 보드를 조작해 줘.');updateRoom();sendSnapshot();}
+function sendSnapshot(){
+ if(status!=='running')return;
+ const p=players[0],t=p.piece;
+ const state={p:t?[t.type,t.rot,t.x,t.y]:null,h:p.hold||'',q:p.queue.slice(0,7).join(''),
+  l:p.lines,n:p.pieces,s:p.sent,b:p.b2b,u:p.surge,i:p.incoming.reduce((n,g)=>n+g.lines,0),
+  e:p.eventUntil>performance.now()?p.event:'',d:p.eventUntil>performance.now()?p.sub:'',x:p.dead?1:0};
+ const signature=JSON.stringify(state);
+ // 400 encoded cells, sent only after locking/garbage. No 40x10 JSON grid per move.
+ const grid=p.grid.map(row=>row.map(cell=>cell||'.').join('')).join('');
+ if(signature===lastStateSignature&&grid===lastGridDigest)return;
+ if(grid!==lastGridDigest)state.g=Array.from({length:H},(_,i)=>grid.slice(i*W,(i+1)*W));
+ if(send('state',{state})) {lastStateSignature=signature;lastGridDigest=grid;}
+}
+function requestReady(){if(!connected||!playersConnected()||readySent||!['lobby','over'].includes(status))return;readySent=true;send('ready');statusLine('준비 완료 · 상대 준비를 기다리는 중');updateRoom();}
+el('createRoom').onclick=createRoom;el('joinRoom').onclick=joinRoom;el('startBtn').onclick=requestReady;
+el('copyInvite').onclick=async()=>{try{await navigator.clipboard.writeText(linkToRoom());statusLine('초대 링크를 복사했어. 친구에게 보내 줘.');}catch{prompt('친구에게 전송할 초대 링크',linkToRoom());}};
+el('serverUrl').value=urlParams.get('server')||localStorage.getItem('dualstack_worker')||'';
+el('roomInput').value=urlParams.get('room')||'';
+if(urlParams.get('room')&&urlParams.get('server'))setTimeout(joinRoom,100);
+function queueFill(p){while(p.queue.length<12)p.queue.push(...shuffleBag());}
+function valid(p,m,x,y){for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++){if(!m[r][c])continue;const bx=x+c,by=y+r;if(bx<0||bx>=W||by>=H)return false;if(by>=0&&p.grid[by][bx])return false;}return true;}
+function spawn(p,type=null){queueFill(p);const t=type||p.queue.shift();queueFill(p);const m=PIECES[t].map(a=>a.slice());const x=3,y=19;p.piece={type:t,m,x,y,rot:0,lastRotate:false,kickIndex:0,lastTurnDir:0};p.holdUsed=false;p.gravity=0;p.groundAt=0;p.lockResets=0;p.dcdUntil=performance.now()+config.dcd;if(!valid(p,m,x,y)){p.dead=true;roundEnd(p.i);}renderMini(p);}
+function setOverlay(i,title,txt,show=true,cls=''){const node=el('overlay'+i);node.className='board-overlay'+(show?' show':'')+(cls?' '+cls:'');node.querySelector('.huge').textContent=title;node.querySelector('.hint').textContent=txt;}
+function hideOverlay(i){el('overlay'+i).className='board-overlay';}
+function updateScore(){for(let i=0;i<2;i++){el('score'+(i+1)).innerHTML=Array.from({length:3},(_,j)=>`<span class="point ${j<wins[i]?'p'+(i+1):''}"></span>`).join('');}}
+function act(p,kind,now){if(status!=='running'||p.dead||!p.piece)return;const t=p.piece;switch(kind){case 'left':case 'right':move(p,kind==='left'?-1:1,0,now);break;case 'soft':if(config.sdf===41)sonicDrop(p,now);break;case 'cw':case 'ccw':case 'flip':turn(p,kind==='cw'?1:kind==='ccw'?-1:2,now);break;case 'hard':hardDrop(p,now);break;case 'hold':doHold(p);break;}}
+function touch(p,now){const t=p.piece;if(!t)return;if(!valid(p,t.m,t.x,t.y+1)){if(!p.groundAt)p.groundAt=now;else if(p.lockResets<15){p.groundAt=now;p.lockResets++;}}else p.groundAt=0;}
+function move(p,dx,dy,now){const t=p.piece;if(!t||!valid(p,t.m,t.x+dx,t.y+dy))return false;t.x+=dx;t.y+=dy;t.lastRotate=false;if(dy>0) p.moved++;touch(p,now);return true;}
+function sonicDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}if(count){p.piece.lastRotate=false;p.moved+=count;}touch(p,now);}
+function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;beep(440,.025);return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
+const tbl=dir===2?KICKS180:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);beep(460,.023);return;}}}
+function doHold(p){if(!p.piece||p.holdUsed)return;const current=p.piece.type;const old=p.hold;p.hold=current;p.piece=null;spawn(p,old);p.holdUsed=true;beep(310,.04);renderMini(p);}
+function hardDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}if(count)p.piece.lastRotate=false;beep(180,.065,'triangle');lock(p,now);}
+function classifySpin(p,t){if(!t.lastRotate)return null;const immobile=!valid(p,t.m,t.x,t.y-1)&&!valid(p,t.m,t.x-1,t.y)&&!valid(p,t.m,t.x+1,t.y);
+if(t.type==='T'){
+ const cx=t.x+1,cy=t.y+1;const corner=(x,y)=>x<0||x>=W||y>=H||(y>=0&&!!p.grid[y][x]);
+ const nw=corner(cx-1,cy-1),ne=corner(cx+1,cy-1),sw=corner(cx-1,cy+1),se=corner(cx+1,cy+1);
+ const total=[nw,ne,sw,se].filter(Boolean).length;
+ if(total>=3){const fronts=[[nw,ne],[ne,se],[sw,se],[nw,sw]][t.rot];return (fronts[0]&&fronts[1])||(t.lastTurnDir!==2&&t.kickIndex===4)?'full':'mini';}
+ // All-Mini+: 세 코너 조건을 못 채운 T도 2코너 + immobile이면 Mini.
+ if(total>=2&&immobile)return 'mini';return null;
+}
+// J/L/S/Z/I/O는 immobile 회전만 Mini로 인정되며, 줄을 지우면 B2B를 유지한다.
+return immobile?'mini':null;
+}
+function clearRows(p){let count=0;const board=p.grid.filter(row=>{if(row.every(Boolean)){count++;return false;}return true;});while(board.length<H)board.unshift(Array(W).fill(null));p.grid=board;return count;}
+function attackAmount(lines,t,spin,combo,b2b,pc){const base=spin==='full'&&t==='T'?[0,2,4,6,8][lines]||0:spin==='mini'&&t==='T'?[0,.5,1,2,3][lines]||0:spin==='mini'?0:[0,.5,1,2,4][lines]||0;
+let calc=base>0?Math.floor(base*(1+.25*Math.max(0,combo))):Math.floor(Math.log(1+1.25*Math.max(0,combo)));if(b2b>=2&&(lines===4||spin&&lines>0||pc))calc+=1;if(pc)calc+=5;return Math.max(0,calc);}
+function lock(p,now){const t=p.piece;if(!t||p.dead)return;const spin=classifySpin(p,t);let overflow=false;
+for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c]){const x=t.x+c,y=t.y+r;if(y<0){overflow=true;continue;}p.grid[y][x]=t.type;}
+p.pieces++;p.piece=null;const lines=clearRows(p);p.lines+=lines;
+const pc=lines>0&&p.grid.every(row=>row.every(v=>v===null));
+let label='',base=0,spike=0;
+if(lines>0){p.combo++;let difficult=(lines===4||spin!==null||pc);
+ if(difficult){p.b2b++;}else{if(p.surge>=4){spike=p.surge;}p.b2b=0;p.surge=0;}
+ if(difficult&&p.b2b>=5)p.surge=p.b2b-1;
+ const b2bCount=Math.max(0,p.b2b-1);
+ base=attackAmount(lines,t.type,spin,p.combo,b2bCount,pc);
+ if(spin){label=(t.type==='T'?'T-SPIN':t.type+'-SPIN')+(spin==='mini'?' MINI':'')+' '+(['','SINGLE','DOUBLE','TRIPLE','QUAD'][lines]||'');p.spins++;}
+ else label=['','SINGLE','DOUBLE','TRIPLE','QUAD'][lines]||`${lines} LINES`;
+ if(pc)label='PERFECT CLEAR!';
+ if(p.combo>0)label+=` · ${p.combo} COMBO`;
+ if(difficult&&p.b2b>1)label+=` · B2B x${p.b2b-1}`;
+ p.glow=now+230;
+ if(base||spike)beep(lines===4?660:540,.1,'triangle');else beep(500,.065);
+}else{p.combo=-1;if(spin){label=(t.type==='T'?'T-SPIN':t.type+'-SPIN')+' ZERO';}}
+const total=base+spike;
+if(total>0)sendAttack(p,total,now,spike);
+if(label){p.event=label;p.sub=total?`공격 ${total}줄 생성${spike?' · SURGE '+spike:''}`:'줄 제거';p.eventUntil=now+1600;}
+// 줄을 없앤 배치는 가비지 추가를 막는다. 준비된 공격은 빈 배치에서 한 번에 최대 8줄까지 들어온다.
+if(lines===0)applyGarbage(p,now);
+if(overflow){p.dead=true;roundEnd(p.i);return;}
+if(status==='running')spawn(p);
+}
+function addFeed(msg){feed.unshift(msg);feed=feed.slice(0,3);el('feed').innerHTML=feed.map(a=>`<div class="feed-item">${a}</div>`).join('');}
+function sendAttack(p,amount,now,surge=0){if(amount<=0||p.i!==0)return;let rest=amount,blocked=0;
+const pending=p.incoming.reduce((s,a)=>s+a.lines,0);const doubleDefense=p.pieces<=14&&pending>0;
+for(const pkt of p.incoming){if(rest<=0)break;const cap=rest*(doubleDefense?2:1),used=Math.min(cap,pkt.lines);pkt.lines-=used;blocked+=used;rest-=doubleDefense?Math.ceil(used/2):used;}
+p.incoming=p.incoming.filter(pkt=>pkt.lines>0);p.blocked+=blocked;
+if(rest<=0){addFeed('<strong>ME</strong> DEFENSE −'+blocked);return;}
+p.sent+=rest;send('attack',{lines:Math.min(20,rest)});addFeed('<strong>ME</strong> ATTACK +'+rest+(blocked?' · CANCEL '+blocked:''));beep(750,.085,'sawtooth',.026);
+}
+function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=8)break;if(now<pkt.active)continue;const count=Math.min(pkt.lines,8-added);for(let j=0;j<count;j++){
+ if(p.grid[0].some(Boolean)){p.dead=true;roundEnd(p.i);return;}
+ p.grid.shift();const row=Array(W).fill('G');row[pkt.hole]=null;p.grid.push(row);added++;
+ // 패킷 사이에서는 구멍이 바뀌며, 패킷 내부에는 작은 확률로 변동을 준다.
+ if(Math.random()<.16)pkt.hole=Math.floor(Math.random()*W);
+ }pkt.lines-=count;}
+p.incoming=p.incoming.filter(pkt=>pkt.lines>0);if(added){p.event='GARBAGE +'+added;p.sub='상대 공격이 들어왔어';p.eventUntil=now+900;p.glow=now+180;beep(105,.17,'sawtooth');}
+}
+function roundEnd(loser){if(status!=='running'||loser!==0)return;status='ending';resetInputs();send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
+function updateRepeat(p,direction,now){const v=p.repeat[direction];if(!p.held[direction])return;if(now-v.at<config.das||now<p.dcdUntil)return;if(config.arr===0){while(move(p,direction==='left'?-1:1,0,now)){}v.done=true;return;}if(!v.done){move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=now;return;}if(now-v.last<config.arr)return;let count=0;while(now-v.last>=config.arr&&count++<20){const moved=move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=v.last+config.arr||now;if(!moved)break;}}
+function loop(now){requestAnimationFrame(loop);
+if(status==='countdown'){
+ const remain=Math.max(0,gameStartTime-now);const n=Math.max(1,Math.ceil(remain/800));setOverlay(0,String(n),'준비');setOverlay(1,String(n),'상대 준비');
+}
+if(status==='running'){
+ const dt=Math.min(.055,(now-(loop.prev||now))/1000);clockTime=now-roundStart;
+ const sec=Math.floor(clockTime/1000);el('clock').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+ const p=players[0];if(!p.dead&&p.piece){
+  const left=p.held.left,right=p.held.right;
+  if(left&&right){if(p.repeat.left.at>p.repeat.right.at)updateRepeat(p,'left',now);else updateRepeat(p,'right',now);}else if(left)updateRepeat(p,'left',now);else if(right)updateRepeat(p,'right',now);
+  if(p.piece){const g=1/0.8*(p.held.soft&&config.sdf!==41?config.sdf:1);p.gravity+=dt*g;let drops=0;
+   while(p.gravity>=1&&drops<40){p.gravity--;if(move(p,0,1,now))drops++;else{p.gravity=0;break;}}
+   if(p.piece){if(!valid(p,p.piece.m,p.piece.x,p.piece.y+1)){if(!p.groundAt)p.groundAt=now;if(now-p.groundAt>=500||p.lockResets>=15)lock(p,now);}else p.groundAt=0;}
+  }
+ }
+ if(now-lastSnapshot>85){lastSnapshot=now;sendSnapshot();}
+}
+loop.prev=now;
+for(const p of players){renderBoard(p,now);renderHud(p,now);}
+}
+function handleDown(e){if(e.target?.matches?.('input,textarea,[contenteditable]'))return;const code=e.code;if(!KEYMAP[0][code])return;e.preventDefault();if(e.repeat||heldKeys.has(code))return;heldKeys.add(code);if(status!=='running')return;const action=KEYMAP[0][code],p=players[0],now=performance.now();if(['left','right','soft'].includes(action)){if(action==='soft'){p.held.soft=true;act(p,'soft',now);}else{p.held[action]=true;p.repeat[action]={at:now,last:now,done:false};act(p,action,now);}}else act(p,action,now);}
+function handleUp(e){heldKeys.delete(e.code);const action=KEYMAP[0][e.code];if(action&&['left','right','soft'].includes(action))players[0].held[action]=false;}
+window.addEventListener('keydown',handleDown);window.addEventListener('keyup',handleUp);window.addEventListener('blur',resetInputs);
+
+function rectRound(ctx,x,y,w,h,r=3){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+function tile(ctx,x,y,size,type,alpha=1,ghost=false){if(type===null||type===undefined)return;ctx.save();ctx.globalAlpha=alpha;const color=COLORS[type]||COLORS.G;if(ghost){ctx.lineWidth=1.8;ctx.strokeStyle=color;ctx.fillStyle=color+'18';rectRound(ctx,x+2,y+2,size-4,size-4,2);ctx.fill();ctx.stroke();ctx.restore();return;}
+ctx.fillStyle=color;rectRound(ctx,x+.7,y+.7,size-1.4,size-1.4,2.5);ctx.fill();ctx.fillStyle='rgba(255,255,255,.23)';ctx.fillRect(x+3,y+3,size-6,Math.max(2,size*.095));ctx.fillStyle='rgba(0,0,0,.19)';ctx.fillRect(x+3,y+size-5,size-6,Math.max(1.4,size*.08));if(type==='G'){ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(x+size*.28,y+size*.28,size*.44,size*.44);}ctx.restore();}
+function renderBoard(p,now){const ctx=boardCtx[p.i];ctx.clearRect(0,0,300,600);ctx.fillStyle='#0a1121';ctx.fillRect(0,0,300,600);
+ctx.strokeStyle='#18243a';ctx.lineWidth=.65;for(let x=1;x<W;x++){ctx.beginPath();ctx.moveTo(x*CELL+.5,0);ctx.lineTo(x*CELL+.5,600);ctx.stroke();}for(let y=1;y<V;y++){ctx.beginPath();ctx.moveTo(0,y*CELL+.5);ctx.lineTo(300,y*CELL+.5);ctx.stroke();}
+for(let r=H-V;r<H;r++)for(let c=0;c<W;c++)if(p.grid[r][c])tile(ctx,c*CELL,(r-(H-V))*CELL,CELL,p.grid[r][c]);
+if(p.piece){const t=p.piece;let gy=t.y;while(valid(p,t.m,t.x,gy+1))gy++;for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c]){
+const px=(t.x+c)*CELL,py=(gy+r-(H-V))*CELL;if(py>=0&&py<600)tile(ctx,px,py,CELL,t.type,.75,true);}
+for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c]){const px=(t.x+c)*CELL,py=(t.y+r-(H-V))*CELL;if(py>=0&&py<600)tile(ctx,px,py,CELL,t.type);}}
+if(now<p.glow){ctx.fillStyle=p.i===0?'#5ce8ff19':'#ff6da51a';ctx.fillRect(0,0,300,600);}
+}
+function drawPreview(canvas,type){const ctx=canvas.getContext('2d');const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);if(!type)return;const m=PIECES[type],coords=[];for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++)if(m[r][c])coords.push([c,r]);const minX=Math.min(...coords.map(p=>p[0])),minY=Math.min(...coords.map(p=>p[1])),maxX=Math.max(...coords.map(p=>p[0])),maxY=Math.max(...coords.map(p=>p[1]));const size=Math.min(23,(w-12)/(maxX-minX+1),(h-10)/(maxY-minY+1));const x0=(w-size*(maxX-minX+1))/2,y0=(h-size*(maxY-minY+1))/2;for(const [c,r] of coords)tile(ctx,x0+(c-minX)*size,y0+(r-minY)*size,size,type);}
+function renderMini(p){drawPreview(holdC[p.i],p.hold);for(let j=0;j<5;j++)drawPreview(nextC[p.i][j],p.queue[j]);}
+function renderHud(p,now){const i=p.i;el('lines'+i).textContent=p.lines;el('attack'+i).textContent=p.sent;el('incoming'+i).textContent=p.incoming.reduce((a,b)=>a+b.lines,0);el('b2b'+i).textContent=Math.max(0,p.b2b-1);
+const minutes=Math.max(.001,clockTime/60000);el('pps'+i).textContent=(p.pieces/60/minutes).toFixed(2);el('apm'+i).textContent=Math.round(p.sent/minutes);el('surge'+i).textContent=p.surge>=4?'SURGE '+p.surge+' ⚡':'';
+const total=p.incoming.reduce((a,b)=>a+b.lines,0);el('garbage'+i).style.height=Math.min(100,total/20*100)+'%';
+const evt=el('event'+i);if(p.eventUntil>now){evt.textContent=p.event;const s=document.createElement('span');s.className='sub';s.textContent=p.sub;evt.appendChild(s);}else if(evt.dataset.last!=='idle'){evt.innerHTML='7-BAG · HOLD · SRS+<span class="sub">콤보와 B2B를 이어 가자</span>';}evt.dataset.last=p.eventUntil>now?'event':'idle';
+}
+window.TetrisDuel={getState:()=>({status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats}}),attackAmount};
+updateScore();queueFill(players[0]);renderMini(players[0]);renderMini(players[1]);setOverlay(0,'ONLINE','서버에 접속해 줘.');setOverlay(1,'WAITING','상대 플레이어');requestAnimationFrame(loop);
+})();
+</script></body></html>
