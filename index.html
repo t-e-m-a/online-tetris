@@ -44,6 +44,10 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 }
 @media(max-width:520px){.station{--compact-side:30px;--compact-gap:2px}.solo-mode .station{--compact-side:58px}}
 @media(max-height:680px) and (min-width:801px){.station{--compact-board:min(225px,max(100px,calc((100dvh - 375px)/2)))}}
+/* Stable HUD: text effects never change the game area height. */
+.event{height:34px;min-height:34px;max-height:34px;overflow:hidden;line-height:15px}
+#restartHold{width:64px;height:5px;border-radius:99px;background:#29364c;display:inline-block;overflow:hidden;vertical-align:middle;flex-shrink:0}
+#restartFill{display:block;height:100%;width:0;background:linear-gradient(90deg,#69d5f3,#f1a9df);border-radius:99px}
 </style>
 </head>
 <body>
@@ -54,7 +58,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 </header>
 <section id="onlinePanel" class="online-panel">
  <div class="online-grid">
-  <label class="field">방 코드 <input type="text" id="roomInput" placeholder="6자리" maxlength="6" autocapitalize="characters" spellcheck="false"></label>
+  <label class="field">방 코드 <input type="text" id="roomInput" placeholder="4자리" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocapitalize="off" spellcheck="false"></label>
   <button class="btn primary" id="createRoom">방 만들기</button>
   <button class="btn" id="joinRoom">참가</button>
   <button class="btn" id="copyInvite" disabled>초대 링크 복사</button>
@@ -64,7 +68,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
  <div class="online-status"><span id="netStatus">방을 만들거나 코드로 참가해</span><strong id="roomDisplay"></strong></div>
 </section>
 <section id="practicePanel" class="practice-panel" hidden>
- <div class="practice-grid"><button class="btn primary" id="soloStart">연습 시작</button><button class="btn" id="soloPause" disabled>일시정지</button><span id="soloStatus" class="practice-status">오프라인 연습</span></div>
+ <div class="practice-grid"><button class="btn primary" id="soloStart">연습 시작</button><button class="btn" id="soloPause" disabled>일시정지</button><span id="soloStatus" class="practice-status">오프라인 연습</span><span id="restartHold" title="R 키 길게 누르기"><span id="restartFill"></span></span></div>
 </section>
 <div id="match" class="match">
  <div class="team"><span class="dot"></span><strong>YOU</strong><div class="points" id="score1"></div></div>
@@ -94,14 +98,15 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
   <div class="keyrow"><span>소프트 드롭</span><div class="keycaps"><span class="keycap">↓</span></div></div>
   <div class="keyrow"><span>하드 드롭</span><div class="keycaps"><span class="keycap">Space</span></div></div>
   <div class="keyrow"><span>회전</span><div class="keycaps"><span class="keycap">Z</span><span class="keycap">X</span><span class="keycap">↑</span><span class="keycap">A (180°)</span></div></div>
-  <div class="keyrow"><span>홀드</span><div class="keycaps"><span class="keycap">C</span><span class="keycap">Shift</span></div></div>
+  <div class="keyrow"><span>홀드</span><div class="keycaps"><span class="keycap">C</span><span class="keycap">Shift</span></div></div><div class="keyrow"><span>연습</span><div class="keycaps"><span class="keycap">R 길게</span><span class="keycap">Ctrl+Z</span></div></div>
  </div></details>
  <details class="options" id="config"><summary>감도 설정</summary><div class="details-body"><div class="settings-controls">
   <label class="setting">DAS <strong id="dasVal">6.5F</strong><input id="das" type="range" min="0" max="20" step="0.5" value="6.5"><span class="setting-explain">좌우 반복 시작 지연</span></label>
   <label class="setting">ARR <strong id="arrVal">1F</strong><input id="arr" type="range" min="0" max="10" step="0.5" value="1"><span class="setting-explain">좌우 반복 간격</span></label>
   <label class="setting">DCD <strong id="dcdVal">0F</strong><input id="dcd" type="range" min="0" max="12" step="1" value="0"><span class="setting-explain">회전·등장 후 지연</span></label>
   <label class="setting">SDF <strong id="sdfVal">20×</strong><input id="sdf" type="range" min="1" max="41" step="1" value="20"><span class="setting-explain">소프트 드롭 배율 · 끝 = ∞</span></label>
-  <label class="setting">타격감 <strong id="fxVal">보통</strong><input id="fx" type="range" min="0" max="3" step="1" value="2"><span class="setting-explain">0 끔 · 1 약함 · 2 보통 · 3 강함</span></label>
+  <label class="setting">타격감 <strong id="fxVal">강함</strong><input id="fx" type="range" min="0" max="3" step="1" value="3"><span class="setting-explain">0 끔 · 1 약함 · 2 보통 · 3 강함</span></label>
+  <label class="setting">효과음 <strong id="volumeVal">70%</strong><input id="volume" type="range" min="0" max="100" step="5" value="70"><span class="setting-explain">효과음 음량</span></label>
  </div><div class="setting-bottom"><span id="settingSaved" class="settings-foot">자동 저장</span><button class="btn" type="button" id="resetHandling">기본값 복원</button></div>
  </div></details>
 </div>
@@ -154,9 +159,9 @@ let handling={...handlingDefault};
 try{const saved=JSON.parse(persistentStore.getItem(HANDLING_KEY)||'null');if(saved&&typeof saved==='object')for(const k of Object.keys(handlingDefault)){const n=Number(saved[k]);const slider=el(k);if(Number.isFinite(n)&&n>=Number(slider.min)&&n<=Number(slider.max))handling[k]=n;}}catch{}
 const config={das:handling.das*FRAME_MS,arr:handling.arr*FRAME_MS,dcd:handling.dcd*FRAME_MS,sdf:handling.sdf,delay:600};
 // Visual feedback remains strictly inside the canvas: no layout-changing shake or transforms.
-const FX_KEY='tetrisdual_impact_v15';
+const FX_KEY='tetrisdual_impact_v16';
 const reducedMotion=!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-let fxLevel=2;
+let fxLevel=3;
 try{const savedFx=persistentStore.getItem(FX_KEY);if(savedFx!==null)fxLevel=Math.min(3,Math.max(0,Number(savedFx)||0));else if(reducedMotion)fxLevel=0;}catch{if(reducedMotion)fxLevel=0;}
 function updateFxUi(){el('fx').value=fxLevel;el('fxVal').textContent=['끔','약함','보통','강함'][fxLevel];}
 el('fx').addEventListener('input',e=>{
@@ -169,35 +174,77 @@ function fmtHandling(k){const n=handling[k];if(k==='sdf')return n===41?'∞ (INS
 function updateHandlingUi(){for(const k of Object.keys(handlingDefault)){el(k).value=handling[k];el(k+'Val').textContent=fmtHandling(k);}}
 function saveHandling(){try{persistentStore.setItem(HANDLING_KEY,JSON.stringify(handling));el('settingSaved').textContent='설정 저장됨 · 1F ≈ 16.67ms (60Hz 기준)';}catch{el('settingSaved').textContent='설정 저장 불가 · 현재 탭에는 적용됨';}}
 for(const k of Object.keys(handlingDefault)){el(k).addEventListener('input',e=>{handling[k]=Number(e.target.value);config[k]=k==='sdf'?handling[k]:handling[k]*FRAME_MS;updateHandlingUi();saveHandling();});}
-el('resetHandling').onclick=()=>{handling={...handlingDefault};for(const k of Object.keys(handling))config[k]=k==='sdf'?handling[k]:handling[k]*FRAME_MS;updateHandlingUi();saveHandling();fxLevel=reducedMotion?0:2;updateFxUi();try{persistentStore.setItem(FX_KEY,String(fxLevel));}catch{}};
+el('resetHandling').onclick=()=>{handling={...handlingDefault};for(const k of Object.keys(handling))config[k]=k==='sdf'?handling[k]:handling[k]*FRAME_MS;updateHandlingUi();saveHandling();fxLevel=reducedMotion?0:3;updateFxUi();try{persistentStore.setItem(FX_KEY,String(fxLevel));}catch{};volume=70;updateVolume();try{persistentStore.setItem(VOLUME_KEY,String(volume));}catch{}};
 updateHandlingUi();
 let sound=true,audio=null;
 try{const storedSound=persistentStore.getItem('tetrisdual_sound_v15');if(storedSound!==null)sound=storedSound==='1';}catch{}
 function updateSoundUi(){el('soundBtn').style.color=sound?'#5ff0ff':'#72839a';el('soundBtn').textContent=sound?'♪':'♪̸';el('soundBtn').title=sound?'소리 켜짐':'소리 꺼짐';el('soundBtn').setAttribute('aria-pressed',String(sound));}
 el('soundBtn').onclick=()=>{sound=!sound;updateSoundUi();try{persistentStore.setItem('tetrisdual_sound_v15',sound?'1':'0');}catch{}};
 updateSoundUi();
-function beep(freq=380,len=.065,type='sine',gain=.028,endFreq=null){if(!sound)return;try{
- audio=audio||new(window.AudioContext||window.webkitAudioContext)();
+// Original synthesized arcade-style sounds, not ripped TETR.IO assets.
+// Layered transient + sub + filtered noise makes the hit audible without clipping.
+const VOLUME_KEY='tetrisdual_volume_v16';let volume=70,master=null,limiter=null,noiseBuffer=null,lastTickAt=0;
+try{const n=Number(persistentStore.getItem(VOLUME_KEY));if(Number.isFinite(n)&&n>=0&&n<=100&&persistentStore.getItem(VOLUME_KEY)!==null)volume=n;}catch{}
+function updateVolume(){el('volume').value=volume;el('volumeVal').textContent=volume+'%';if(master)master.gain.value=.20*Math.pow(volume/100,1.3);}
+el('volume').oninput=e=>{volume=Number(e.target.value);updateVolume();try{persistentStore.setItem(VOLUME_KEY,String(volume));}catch{}};
+updateVolume();
+function engineAudio(){if(!sound||volume<=0)return null;try{
+ if(!audio){audio=new(window.AudioContext||window.webkitAudioContext)();
+  limiter=audio.createDynamicsCompressor();limiter.threshold.value=-16;limiter.knee.value=12;limiter.ratio.value=8;limiter.attack.value=.002;limiter.release.value=.11;
+  master=audio.createGain();master.gain.value=.20*Math.pow(volume/100,1.3);
+  master.connect(limiter);limiter.connect(audio.destination);
+  const n=Math.ceil(audio.sampleRate*.35);noiseBuffer=audio.createBuffer(1,n,audio.sampleRate);const data=noiseBuffer.getChannelData(0);
+  for(let i=0;i<n;i++)data[i]=(Math.random()*2-1);
+ }
  if(audio.state==='suspended')audio.resume().catch(()=>{});
- const start=audio.currentTime,o=audio.createOscillator(),g=audio.createGain();o.type=type;
- o.frequency.setValueAtTime(freq,start);if(endFreq&&endFreq>0)o.frequency.exponentialRampToValueAtTime(endFreq,start+len);
- g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(Math.max(.0002,gain),start+.006);
- g.gain.exponentialRampToValueAtTime(.0001,start+len);o.connect(g);g.connect(audio.destination);o.start(start);o.stop(start+len+.01);
-}catch{}}
-function impactSound(kind,power=1){if(!sound)return;
- const v=Math.min(1.4,.75+power*.12);
- if(kind==='drop'){beep(170,.09,'triangle',.038*v,64);beep(610,.038,'square',.009*v,230);}
- else if(kind==='clear'){beep(460+power*80,.15,'triangle',.025*v,840+power*50);beep(780,.10,'sine',.012*v,1180);}
- else if(kind==='spin'){beep(690,.16,'sine',.027*v,1240);beep(970,.13,'triangle',.011*v,1620);}
- else if(kind==='attack'){beep(320,.13,'sawtooth',.016*v,112);beep(840,.075,'triangle',.012*v,1060);}
- else if(kind==='pc'){beep(610,.21,'triangle',.025*v,1250);beep(920,.18,'sine',.015*v,1600);}
- else if(kind==='garbage'){beep(140,.16,'sawtooth',.017*v,70);}
+ return audio;
+}catch{return null;}}
+function tone(freq,duration=.08,type='triangle',gain=.2,endFreq=null,delay=0){const a=engineAudio();if(!a)return;
+ try{const at=a.currentTime+delay,osc=a.createOscillator(),env=a.createGain();osc.type=type;
+ osc.frequency.setValueAtTime(Math.max(20,freq),at);if(endFreq)osc.frequency.exponentialRampToValueAtTime(Math.max(20,endFreq),at+duration);
+ env.gain.setValueAtTime(.0001,at);env.gain.linearRampToValueAtTime(gain,at+Math.min(.007,duration*.15));
+ env.gain.exponentialRampToValueAtTime(.0001,at+duration);osc.connect(env);env.connect(master);osc.start(at);osc.stop(at+duration+.02);
+ }catch{}}
+function hiss(duration=.07,gain=.16,cutoff=2200,delay=0){const a=engineAudio();if(!a||!noiseBuffer)return;
+ try{const at=a.currentTime+delay,source=a.createBufferSource(),filter=a.createBiquadFilter(),env=a.createGain();source.buffer=noiseBuffer;
+ filter.type='lowpass';filter.frequency.value=cutoff;filter.Q.value=.6;
+ env.gain.setValueAtTime(.0001,at);env.gain.linearRampToValueAtTime(gain,at+.004);env.gain.exponentialRampToValueAtTime(.0001,at+duration);
+ source.connect(filter);filter.connect(env);env.connect(master);source.start(at);source.stop(at+duration+.01);
+ }catch{}}
+// Existing rotation and hold code calls beep; keep those actions understated.
+function beep(freq=420,len=.04,type='triangle',gain=.05,endFreq=null){const now=performance.now();if(now-lastTickAt<14)return;lastTickAt=now;tone(freq,len,type,Math.min(.12,gain*2.6),endFreq||Math.max(80,freq*.82));}
+function impactSound(kind,power=1){if(!sound)return;const n=Math.min(4,Math.max(1,Number(power)||1));
+ if(kind==='drop'){
+  tone(188,.15,'sine',.7,48);tone(860,.037,'triangle',.23,180);hiss(.07,.43,1750);
+ }else if(kind==='clear'){
+  tone(180+n*22,.14,'sine',.48,78);hiss(.085+n*.012,.30+n*.06,2900);
+  tone(420+n*80,.125,'triangle',.17+n*.03,680+n*120,.025);
+  if(n>=4){tone(210,.22,'sawtooth',.24,95,.025);tone(980,.17,'sine',.18,1440,.075);}
+ }else if(kind==='spin'){
+  hiss(.07,.18,4900);tone(520,.14,'triangle',.24,1150);
+  tone(780,.22,'sine',.22,1540,.055);tone(1200,.24,'triangle',.14,1900,.10);
+ }else if(kind==='attack'){
+  tone(310,.19,'sawtooth',.20,78);hiss(.12,.26,4800);
+  tone(750,.105,'triangle',.14,1350,.045);
+ }else if(kind==='pc'){
+  tone(142,.27,'sine',.62,61);hiss(.21,.58,5700);
+  [587,740,880,1175].forEach((f,i)=>{tone(f,.20,'triangle',.26, f*1.10,i*.075);tone(f*2,.11,'sine',.075,null,i*.075+.035);});
+ }else if(kind==='garbage'){
+  tone(148,.18,'sawtooth',.25,62);hiss(.14,.35,1400);
+ }else if(kind==='undo'){
+  tone(610,.085,'sine',.16,420);tone(420,.10,'triangle',.13,260,.035);
+ }else if(kind==='restart'){
+  tone(260,.11,'triangle',.18,450);tone(530,.14,'sine',.19,840,.08);
+ }
 }
 function rotateMat(m,dir){if(dir===2)return rotateMat(rotateMat(m,1),1);const n=m.length,r=Array.from({length:n},()=>Array(n).fill(0));for(let y=0;y<n;y++)for(let x=0;x<n;x++)r[dir===1?x:n-1-x][dir===1?n-1-y:y]=m[y][x];return r;}
-function shuffleBag(){const a=[...TYPES];for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]];}return a;}
-function newPlayer(i){return {i,grid:Array.from({length:H},()=>Array(W).fill(null)),queue:[],hold:null,holdUsed:false,piece:null,fallen:0,combo:-1,b2b:0,surge:0,lines:0,sent:0,blocked:0,pieces:0,spins:0,incoming:[],garbageHole:Math.floor(Math.random()*W),dead:false,event:'READY',sub:'',eventUntil:0,lastLock:0,moved:0,gravity:0,groundAt:0,lockResets:0,dcdUntil:0,repeat:{left:{at:0,last:0,done:false},right:{at:0,last:0,done:false}},held:{left:false,right:false,soft:false},glow:0,effects:[]};}
+function randomSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]||0x9e3779b9;}catch{return (Date.now()^Math.floor(Math.random()*4294967295))>>>0||0x9e3779b9;}}
+function nextRandom(p){let x=p.rng>>>0;x^=x<<13;x^=x>>>17;x^=x<<5;p.rng=x>>>0;return p.rng/4294967296;}
+function shuffleBag(p){const a=[...TYPES];for(let j=a.length-1;j>0;j--){const r=Math.floor(nextRandom(p)*(j+1));[a[j],a[r]]=[a[r],a[j]];}return a;}
+function newPlayer(i){return {i,rng:randomSeed(),grid:Array.from({length:H},()=>Array(W).fill(null)),queue:[],hold:null,holdUsed:false,piece:null,fallen:0,combo:-1,b2b:0,surge:0,lines:0,sent:0,blocked:0,pieces:0,spins:0,incoming:[],garbageHole:Math.floor(Math.random()*W),dead:false,event:'READY',sub:'',eventUntil:0,lastLock:0,moved:0,gravity:0,groundAt:0,lockResets:0,dcdUntil:0,repeat:{left:{at:0,last:0,done:false},right:{at:0,last:0,done:false}},held:{left:false,right:false,soft:false},glow:0,effects:[]};}
 let players=[newPlayer(0),newPlayer(1)],wins=[0,0],round=1,status='ready',roundStart=0,countdownAt=0,clockTime=0,feed=[],mode='online';
 let ws=null, room='',seat=-1, connected=false, readySent=false, gameStartTime=0, workerBase='', lastSnapshot=0;
+const UNDO_LIMIT=140, R_HOLD_MS=520;let soloUndo=[],rHoldAt=0,rHoldTriggered=false;
 // Send a compact, changed snapshot at most once per ~85ms.
 let lastStateSignature='', lastGridDigest='', lastWireSent=Date.now();
 const networkStats={stateMessages:0,stateBytes:0,totalMessages:0,pings:0};
@@ -229,7 +276,7 @@ setInterval(()=>{
 },20000);
 function resetInputs(){heldKeys.clear();for(const p of players){p.held={left:false,right:false,soft:false};}}
 async function createRoom(){try{workerBase=getBase();statusLine('방 생성 중…');const res=await fetch(workerBase+'/api/create',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:sessionToken})});const data=await res.json();if(!res.ok)throw Error(data.error||'서버 오류');room=data.code;el('roomInput').value=room;persistentStore.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('방 생성 실패: '+e.message);}}
-async function joinRoom(){try{workerBase=getBase();room=el('roomInput').value.trim().toUpperCase();if(!/^[A-HJ-NP-Z2-9]{6}$/.test(room))throw Error('올바른 6자리 방 코드를 입력해 줘.');statusLine('방 확인 중…');const res=await fetch(workerBase+'/api/check/'+room);const data=await res.json();if(!res.ok)throw Error(data.error||'방 확인 실패');persistentStore.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('참가 실패: '+e.message);}}
+async function joinRoom(){try{workerBase=getBase();room=el('roomInput').value.trim().toUpperCase();if(!/^[0-9]{4}$/.test(room))throw Error('올바른 4자리 숫자 방 코드를 입력해 줘.');statusLine('방 확인 중…');const res=await fetch(workerBase+'/api/check/'+room);const data=await res.json();if(!res.ok)throw Error(data.error||'방 확인 실패');persistentStore.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('참가 실패: '+e.message);}}
 function connectRoom(){if(ws){try{ws.close(1000,'Changing room');}catch{}}connected=false;readySent=false;presence=[false,false];status='lobby';resetInputs();const endpoint=workerBase.replace(/^http/,'ws')+'/api/ws/'+room+'?token='+encodeURIComponent(sessionToken);const socket=new WebSocket(endpoint);ws=socket;statusLine('서버 연결 중…');updateRoom();socket.addEventListener('open',()=>{if(ws!==socket)return;connected=true;statusLine('접속 성공 · 상대를 기다리는 중');updateRoom();});socket.addEventListener('message',e=>{if(ws!==socket)return;let msg;try{msg=JSON.parse(e.data);}catch{return;}onNetwork(msg);});socket.addEventListener('close',e=>{if(ws!==socket)return;connected=false;presence=[false,false];readySent=false;status='lobby';resetInputs();statusLine('연결 종료 ('+e.code+') · 방 코드를 다시 입력해 참가할 수 있어.');setOverlay(0,'OFFLINE','서버와 연결이 종료됐어');setOverlay(1,'OFFLINE','상대 연결 끊김');updateRoom();});socket.addEventListener('error',()=>{if(ws===socket)statusLine('연결 오류 · Workers 서버 주소를 확인해 줘.');});}
 function startRound(msg){lastStateSignature='';lastGridDigest='';lastSnapshot=0;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;status='countdown';readySent=false;clockTime=0;feed=[];el('feed').innerHTML='';players=[newPlayer(0),newPlayer(1)];resetInputs();queueFill(players[1]);spawn(players[0]);setOverlay(0,'3','준비');setOverlay(1,'3','상대 준비');gameStartTime=performance.now()+2300;countdownAt=performance.now();el('roundText').textContent='ROUND '+round+' · COUNTDOWN';updateScore();updateRoom();}
 function onNetwork(msg){
@@ -285,10 +332,48 @@ if(urlParams.get('room')&&urlParams.get('server'))setTimeout(joinRoom,100);
 
 // Single-player practice shares the same input, rotation, handling and rendering engine.
 // It does not open a WebSocket or change the online room protocol.
+// One checkpoint per spawned piece. Each checkpoint includes the deterministic
+// 7-bag generator state, complete queue, hold and hold-used flag, not just cells.
+function soloCheckpoint(){
+ if(mode!=='solo'||!players[0]?.piece)return;
+ const p=players[0];
+ soloUndo.push({
+  grid:p.grid.map(row=>row.slice()),queue:p.queue.slice(),rng:p.rng>>>0,
+  hold:p.hold,holdUsed:p.holdUsed,piece:{...p.piece,m:p.piece.m.map(row=>row.slice())},
+  combo:p.combo,b2b:p.b2b,surge:p.surge,lines:p.lines,sent:p.sent,
+  blocked:p.blocked,pieces:p.pieces,spins:p.spins,moved:p.moved,
+  incoming:p.incoming.map(x=>({...x})),garbageHole:p.garbageHole,
+  clockTime:Math.max(0,clockTime),
+ });
+ if(soloUndo.length>UNDO_LIMIT)soloUndo.shift();
+}
+function undoSolo(){
+ if(mode!=='solo'||!['running','paused','soloOver'].includes(status)||!soloUndo.length)return false;
+ const p=players[0], last=soloUndo.at(-1);
+ // Normal play: current checkpoint is the new piece after the latest lock,
+ // so rewind one more checkpoint. After top-out no new spawn was saved.
+ if(status!=='soloOver' && p.pieces===last.pieces && soloUndo.length>1)soloUndo.pop();
+ const s=soloUndo.at(-1);if(!s)return false;
+ p.grid=s.grid.map(row=>row.slice());p.queue=s.queue.slice();p.rng=s.rng;
+ p.hold=s.hold;p.holdUsed=s.holdUsed;p.piece={...s.piece,m:s.piece.m.map(row=>row.slice())};
+ p.combo=s.combo;p.b2b=s.b2b;p.surge=s.surge;p.lines=s.lines;p.sent=s.sent;
+ p.blocked=s.blocked;p.pieces=s.pieces;p.spins=s.spins;p.moved=s.moved;
+ p.incoming=s.incoming.map(x=>({...x}));p.garbageHole=s.garbageHole;
+ p.gravity=0;p.groundAt=0;p.lockResets=0;p.dcdUntil=0;p.dead=false;
+ p.event='UNDO';p.sub='';p.eventUntil=performance.now()+650;p.effects=[];p.glow=0;
+ status='running';hideOverlay(0);resetInputs();
+ clockTime=s.clockTime;roundStart=performance.now()-clockTime;
+ el('soloPause').disabled=false;el('soloPause').textContent='일시정지';
+ el('soloStart').textContent='다시 시작';el('soloStatus').textContent='되돌리기';
+ el('roundText').textContent='연습 중';renderMini(p);impactSound('undo');
+ return true;
+}
+function resetRestartHold(){rHoldAt=0;rHoldTriggered=false;el('restartFill').style.width='0%';}
+
 function chooseMode(next){
  if(mode===next)return;
  if(ws){const old=ws;ws=null;try{old.close(1000,'Mode changed');}catch{}}
- mode=next;connected=false;readySent=false;room='';seat=-1;presence=[false,false];
+ mode=next;connected=false;readySent=false;room='';seat=-1;presence=[false,false];soloUndo=[];resetRestartHold();
  status=next==='solo'?'soloIdle':'lobby';wins=[0,0];round=1;clockTime=0;feed=[];
  players=[newPlayer(0),newPlayer(1)];queueFill(players[0]);resetInputs();
  lastStateSignature='';lastGridDigest='';
@@ -308,9 +393,9 @@ function chooseMode(next){
 }
 function startSolo(){
  if(mode!=='solo')chooseMode('solo');
- status='running';players=[newPlayer(0),newPlayer(1)];queueFill(players[0]);resetInputs();
+ soloUndo=[];status='running';players=[newPlayer(0),newPlayer(1)];queueFill(players[0]);resetInputs();
  roundStart=performance.now();clockTime=0;feed=[];el('feed').textContent='';
- spawn(players[0]);renderMini(players[0]);renderMini(players[1]);hideOverlay(0);
+ spawn(players[0]);soloCheckpoint();renderMini(players[0]);renderMini(players[1]);hideOverlay(0);
  el('roundText').textContent='연습 중';el('soloStatus').textContent='연습 중';
  el('soloStart').textContent='다시 시작';el('soloPause').disabled=false;el('soloPause').textContent='일시정지';
 }
@@ -327,7 +412,7 @@ el('modeOnline').onclick=()=>chooseMode('online');
 el('modeSolo').onclick=()=>chooseMode('solo');
 el('soloStart').onclick=startSolo;
 el('soloPause').onclick=toggleSoloPause;
-function queueFill(p){while(p.queue.length<12)p.queue.push(...shuffleBag());}
+function queueFill(p){while(p.queue.length<12)p.queue.push(...shuffleBag(p));}
 function valid(p,m,x,y){for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++){if(!m[r][c])continue;const bx=x+c,by=y+r;if(bx<0||bx>=W||by>=H)return false;if(by>=0&&p.grid[by][bx])return false;}return true;}
 function spawn(p,type=null){queueFill(p);const t=type||p.queue.shift();queueFill(p);const m=PIECES[t].map(a=>a.slice());const x=3,y=19;p.piece={type:t,m,x,y,rot:0,lastRotate:false,kickIndex:0,lastTurnDir:0};p.holdUsed=false;p.gravity=0;p.groundAt=0;p.lockResets=0;p.dcdUntil=performance.now()+config.dcd;if(!valid(p,m,x,y)){p.dead=true;roundEnd(p.i);}renderMini(p);}
 function setOverlay(i,title,txt,show=true,cls=''){const node=el('overlay'+i);node.className='board-overlay'+(show?' show':'')+(cls?' '+cls:'');node.querySelector('.huge').textContent=title;node.querySelector('.hint').textContent=txt;}
@@ -337,9 +422,9 @@ function act(p,kind,now){if(status!=='running'||p.dead||!p.piece)return;const t=
 function touch(p,now){const t=p.piece;if(!t)return;if(!valid(p,t.m,t.x,t.y+1)){if(!p.groundAt)p.groundAt=now;else if(p.lockResets<15){p.groundAt=now;p.lockResets++;}}else p.groundAt=0;}
 function move(p,dx,dy,now){const t=p.piece;if(!t||!valid(p,t.m,t.x+dx,t.y+dy))return false;t.x+=dx;t.y+=dy;t.lastRotate=false;if(dy>0) p.moved++;touch(p,now);return true;}
 function sonicDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}if(count){p.piece.lastRotate=false;p.moved+=count;}touch(p,now);}
-function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;beep(440,.025);return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
-const tbl=dir===2?KICKS180:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);beep(460,.023);return;}}}
-function doHold(p){if(!p.piece||p.holdUsed)return;const current=p.piece.type;const old=p.hold;p.hold=current;p.piece=null;spawn(p,old);p.holdUsed=true;beep(310,.04);renderMini(p);}
+function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;beep(470,.03,'triangle',.03,590);return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
+const tbl=dir===2?KICKS180:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);beep(470,.03,'triangle',.03,600);return;}}}
+function doHold(p){if(!p.piece||p.holdUsed)return;const current=p.piece.type;const old=p.hold;p.hold=current;p.piece=null;spawn(p,old);p.holdUsed=true;beep(320,.07,'triangle',.07,540);renderMini(p);}
 function hardDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}
  const t=p.piece;const blocks=[];for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c])blocks.push([(t.x+c+.5)*CELL,(t.y+r-(H-V)+.5)*CELL]);
  const visible=blocks.filter(b=>b[1]>=0&&b[1]<600);
@@ -364,9 +449,9 @@ let calc=base>0?Math.floor(base*(1+.25*Math.max(0,combo))):Math.floor(Math.log(1
 function lock(p,now){const t=p.piece;if(!t||p.dead)return;const spin=classifySpin(p,t);let overflow=false;
 for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c]){const x=t.x+c,y=t.y+r;if(y<0){overflow=true;continue;}p.grid[y][x]=t.type;}
 p.pieces++;p.piece=null;const {count:lines,rows:clearedRows}=clearRows(p);p.lines+=lines;
-if(lines)addEffect(p,'clear',now,{rows:clearedRows,power:lines});
-if(spin)addEffect(p,'spin',now,{type:t.type,x:(t.x+1.5)*CELL,y:Math.min(580,Math.max(40,(t.y+1.5-(H-V))*CELL)),power:spin==='full'?2:1});
 const pc=lines>0&&p.grid.every(row=>row.every(v=>v===null));
+if(lines&&!pc)addEffect(p,'clear',now,{rows:clearedRows,power:lines});
+if(spin&&!pc)addEffect(p,'spin',now,{type:t.type,mini:spin==='mini',x:(t.x+1.5)*CELL,y:Math.min(580,Math.max(40,(t.y+1.5-(H-V))*CELL)),power:spin==='full'?2:1});
 let label='',base=0,spike=0;
 if(lines>0){p.combo++;let difficult=(lines===4||spin!==null||pc);
  if(difficult){p.b2b++;}else{if(p.surge>=4){spike=p.surge;}p.b2b=0;p.surge=0;}
@@ -379,23 +464,23 @@ if(lines>0){p.combo++;let difficult=(lines===4||spin!==null||pc);
  if(p.combo>0)label+=` · ${p.combo} COMBO`;
  if(difficult&&p.b2b>1)label+=` · B2B x${p.b2b-1}`;
  p.glow=now+230;
- if(spin)impactSound('spin',lines);else impactSound('clear',lines);
-}else{p.combo=-1;if(spin){label=(t.type==='T'?'T-SPIN':t.type+'-SPIN')+' ZERO';}}
+ if(pc)impactSound('pc',Math.max(1,lines));else if(spin)impactSound('spin',Math.max(1,lines));else impactSound('clear',lines);
+}else{p.combo=-1;if(spin){label=(t.type==='T'?'T-SPIN':t.type+'-SPIN')+' ZERO';impactSound('spin',1);}}
 const total=base+spike;
-if(total>0)sendAttack(p,total,now,spike);
+if(total>0)sendAttack(p,total,now,spike,pc);
 if(label){p.event=label;p.sub=total?`공격 ${total}줄 생성${spike?' · SURGE '+spike:''}`:'줄 제거';p.eventUntil=now+1600;}
 // 줄을 없앤 배치는 가비지 추가를 막는다. 준비된 공격은 빈 배치에서 한 번에 최대 8줄까지 들어온다.
 if(lines===0)applyGarbage(p,now);
 if(overflow){p.dead=true;roundEnd(p.i);return;}
-if(status==='running')spawn(p);
+if(status==='running'){spawn(p);if(mode==='solo'&&!p.dead)soloCheckpoint();}
 }
 function addFeed(msg){feed.unshift(msg);feed=feed.slice(0,3);el('feed').innerHTML=feed.map(a=>`<div class="feed-item">${a}</div>`).join('');}
-function sendAttack(p,amount,now,surge=0){if(amount<=0||p.i!==0)return;let rest=amount,blocked=0;
+function sendAttack(p,amount,now,surge=0,isPC=false){if(amount<=0||p.i!==0)return;let rest=amount,blocked=0;
 const pending=p.incoming.reduce((s,a)=>s+a.lines,0);const doubleDefense=p.pieces<=14&&pending>0;
 for(const pkt of p.incoming){if(rest<=0)break;const cap=rest*(doubleDefense?2:1),used=Math.min(cap,pkt.lines);pkt.lines-=used;blocked+=used;rest-=doubleDefense?Math.ceil(used/2):used;}
 p.incoming=p.incoming.filter(pkt=>pkt.lines>0);p.blocked+=blocked;
 if(rest<=0){addFeed('<strong>ME</strong> DEFENSE −'+blocked);return;}
-p.sent+=rest;send('attack',{lines:Math.min(20,rest)});addFeed('<strong>ME</strong> ATTACK +'+rest+(blocked?' · CANCEL '+blocked:''));addEffect(p,'attack',now,{power:Math.min(rest,12)});impactSound('attack',Math.min(rest,12));
+p.sent+=rest;send('attack',{lines:Math.min(20,rest)});addFeed('<strong>ME</strong> ATTACK +'+rest+(blocked?' · CANCEL '+blocked:''));if(!isPC){addEffect(p,'attack',now,{power:Math.min(rest,12)});impactSound('attack',Math.min(rest,12));}
 }
 function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=8)break;if(now<pkt.active)continue;const count=Math.min(pkt.lines,8-added);for(let j=0;j<count;j++){
  if(p.grid[0].some(Boolean)){p.dead=true;roundEnd(p.i);return;}
@@ -408,6 +493,7 @@ p.incoming=p.incoming.filter(pkt=>pkt.lines>0);if(added){p.event='GARBAGE +'+add
 function roundEnd(loser){if(status!=='running'||loser!==0)return;resetInputs();if(mode==='solo'){status='soloOver';setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
 function updateRepeat(p,direction,now){const v=p.repeat[direction];if(!p.held[direction])return;if(now-v.at<config.das||now<p.dcdUntil)return;if(config.arr===0){while(move(p,direction==='left'?-1:1,0,now)){}v.done=true;return;}if(!v.done){move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=now;return;}if(now-v.last<config.arr)return;let count=0;while(now-v.last>=config.arr&&count++<20){const moved=move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=v.last+config.arr||now;if(!moved)break;}}
 function loop(now){requestAnimationFrame(loop);
+if(rHoldAt&&mode==='solo'&&!rHoldTriggered){const progress=Math.max(0,Math.min(1,(now-rHoldAt)/R_HOLD_MS));el('restartFill').style.width=(progress*100)+'%';if(progress>=1){rHoldTriggered=true;startSolo();impactSound('restart');el('restartFill').style.width='100%';}}
 if(status==='countdown'){
  const remain=Math.max(0,gameStartTime-now);const n=Math.max(1,Math.ceil(remain/800));setOverlay(0,String(n),'준비');setOverlay(1,String(n),'상대 준비');
 }
@@ -427,9 +513,12 @@ if(status==='running'){
 loop.prev=now;
 for(const p of players){renderBoard(p,now);renderHud(p,now);}
 }
-function handleDown(e){if(e.target?.matches?.('input,textarea,[contenteditable]'))return;const code=e.code;if(!KEYMAP[0][code])return;e.preventDefault();if(e.repeat||heldKeys.has(code))return;heldKeys.add(code);if(status!=='running')return;const action=KEYMAP[0][code],p=players[0],now=performance.now();if(['left','right','soft'].includes(action)){if(action==='soft'){p.held.soft=true;act(p,'soft',now);}else{p.held[action]=true;p.repeat[action]={at:now,last:now,done:false};act(p,action,now);}}else act(p,action,now);}
-function handleUp(e){heldKeys.delete(e.code);const action=KEYMAP[0][e.code];if(action&&['left','right','soft'].includes(action))players[0].held[action]=false;}
-window.addEventListener('keydown',handleDown);window.addEventListener('keyup',handleUp);window.addEventListener('blur',resetInputs);
+function handleDown(e){if(e.target?.matches?.('input,textarea,[contenteditable]'))return;const code=e.code;
+if(mode==='solo'&&(e.ctrlKey||e.metaKey)&&code==='KeyZ'){e.preventDefault();if(!e.repeat)undoSolo();return;}
+if(mode==='solo'&&code==='KeyR'){e.preventDefault();if(!rHoldAt&&!e.repeat){rHoldAt=performance.now();rHoldTriggered=false;}return;}
+if(!KEYMAP[0][code])return;e.preventDefault();if(e.repeat||heldKeys.has(code))return;heldKeys.add(code);if(status!=='running')return;const action=KEYMAP[0][code],p=players[0],now=performance.now();if(['left','right','soft'].includes(action)){if(action==='soft'){p.held.soft=true;act(p,'soft',now);}else{p.held[action]=true;p.repeat[action]={at:now,last:now,done:false};act(p,action,now);}}else act(p,action,now);}
+function handleUp(e){if(e.code==='KeyR'){resetRestartHold();return;}heldKeys.delete(e.code);const action=KEYMAP[0][e.code];if(action&&['left','right','soft'].includes(action))players[0].held[action]=false;}
+window.addEventListener('keydown',handleDown);window.addEventListener('keyup',handleUp);window.addEventListener('blur',()=>{resetInputs();resetRestartHold();});
 
 function rectRound(ctx,x,y,w,h,r=3){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
 function tile(ctx,x,y,size,type,alpha=1,ghost=false){if(type===null||type===undefined)return;ctx.save();ctx.globalAlpha=alpha;const color=COLORS[type]||COLORS.G;if(ghost){ctx.lineWidth=1.8;ctx.strokeStyle=color;ctx.fillStyle=color+'18';rectRound(ctx,x+2,y+2,size-4,size-4,2);ctx.fill();ctx.stroke();ctx.restore();return;}
@@ -438,62 +527,90 @@ ctx.fillStyle=color;rectRound(ctx,x+.7,y+.7,size-1.4,size-1.4,2.5);ctx.fill();ct
 // No DOM transforms: the game never moves when a drop, spin or T-spin label appears.
 function addEffect(p,kind,now,opt={}){
  if(!fxLevel||!p||!Array.isArray(p.effects))return;
- const duration={drop:205,clear:325,spin:430,attack:330,garbage:390,pc:610}[kind]||250;
- const count=fxLevel===1?6:fxLevel===2?11:17;
+ const duration={drop:295,clear:440,spin:680,attack:470,garbage:440,pc:1080}[kind]||350;
+ const count=fxLevel===1?10:fxLevel===2?20:32;
  const x=Number.isFinite(opt.x)?opt.x:150,y=Number.isFinite(opt.y)?opt.y:350;
  const particles=Array.from({length:count},(_,i)=>{
    const angle=(i/count)*Math.PI*2+(i*2.3999%0.3),speed=(18+(i*11%33))*(.8+fxLevel*.22);
    return {vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:.75+(i%4)*.06,size:1.6+i%3};
  });
- p.effects.push({kind,at:now,duration,x,y,rows:opt.rows||[],type:opt.type||'I',power:opt.power||1,particles});
+ p.effects.push({kind,at:now,duration,x,y,rows:opt.rows||[],type:opt.type||'I',mini:!!opt.mini,power:opt.power||1,particles});
  if(p.effects.length>8)p.effects.shift();
 }
 function renderEffects(ctx,p,now){
  if(!fxLevel||!p.effects?.length)return;
- let next=0;
- ctx.save();ctx.globalCompositeOperation='screen';
+ const remaining=[];const amp=fxLevel===1?.48:fxLevel===2?.77:1;
+ ctx.save();ctx.beginPath();ctx.rect(0,0,300,600);ctx.clip();
  for(const fx of p.effects){
-   const t=(now-fx.at)/fx.duration;
-   if(t<0||t>=1)continue;
-   p.effects[next++]=fx;
-   const opacity=(1-t)*(fxLevel===1?.42:fxLevel===2?.7:.95);
-   let color=fx.kind==='pc'?'#ffe989':fx.kind==='garbage'?'#ff6572':fx.kind==='spin'?'#e692ff':fx.kind==='attack'?'#86f5ff':fx.kind==='clear'?'#a5edff':(COLORS[fx.type]||'#80e7ff');
-   ctx.globalAlpha=opacity;
-   if(fx.kind==='drop'){
-     const grad=ctx.createRadialGradient(fx.x,fx.y,1,fx.x,fx.y,70+t*45);
-     grad.addColorStop(0,color+'b8');grad.addColorStop(.4,color+'2a');grad.addColorStop(1,color+'00');
-     ctx.fillStyle=grad;ctx.fillRect(fx.x-125,fx.y-105,250,150);
-     ctx.strokeStyle=color;ctx.lineWidth=2.6*(1-t)+.6;ctx.beginPath();ctx.moveTo(Math.max(0,fx.x-25-90*t),fx.y);ctx.lineTo(Math.min(300,fx.x+25+90*t),fx.y);ctx.stroke();
-   }else if(fx.kind==='clear'){
-     for(const row of fx.rows){const cy=(row-(H-V)+.5)*CELL;if(cy<0||cy>600)continue;
-       ctx.fillStyle=color;ctx.globalAlpha=opacity*.55;ctx.fillRect(0,cy-4-8*t,300,8+16*t);
-       ctx.globalAlpha=opacity;ctx.strokeStyle='#ffffff';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(300,cy);ctx.stroke();}
-     ctx.globalAlpha=opacity*.08;ctx.fillStyle=color;ctx.fillRect(0,0,300,600);
-   }else if(fx.kind==='spin'||fx.kind==='pc'){
-     const centerX=fx.kind==='pc'?150:fx.x,centerY=fx.kind==='pc'?300:fx.y;
-     ctx.strokeStyle=color;ctx.lineWidth=2.5-t*1.5;
-     ctx.beginPath();ctx.ellipse(centerX,centerY,25+t*85,20+t*65,0,0,Math.PI*2);ctx.stroke();
-     ctx.globalAlpha=opacity*.16;ctx.fillStyle=color;ctx.fillRect(0,0,300,600);ctx.globalAlpha=opacity;
-   }else if(fx.kind==='attack'){
-     ctx.strokeStyle=color;ctx.lineWidth=4*(1-t)+1;
-     for(let i=0;i<3;i++){const h=90+i*90;ctx.beginPath();ctx.moveTo(165-90*t,h+20);ctx.lineTo(285+15*t,h-15);ctx.stroke();}
-     ctx.globalAlpha=opacity*.16;ctx.fillStyle=color;ctx.fillRect(250,0,50,600);ctx.globalAlpha=opacity;
-   }else if(fx.kind==='garbage'){
-     ctx.fillStyle=color;ctx.globalAlpha=opacity*.12;ctx.fillRect(0,0,300,600);
-     ctx.globalAlpha=opacity;ctx.strokeStyle=color;ctx.lineWidth=2.7;ctx.strokeRect(1,1,298,598);
+  const t=(now-fx.at)/fx.duration;if(t<0||t>=1)continue;remaining.push(fx);
+  const fade=Math.pow(1-t,fx.kind==='spin'||fx.kind==='pc'?.7:1.4)*amp;
+  const col=fx.kind==='pc'?'#ffe5a5':fx.kind==='garbage'?'#ff4c7d':fx.kind==='spin'?'#e381fa':fx.kind==='attack'?'#5be9ff':fx.kind==='clear'?'#8eefff':(COLORS[fx.type]||'#72e9ff');
+  ctx.save();ctx.globalCompositeOperation='screen';
+  // Short full-board flash acts as a hit confirmation while the board DOM stays fixed.
+  if(fx.kind!=='drop'){
+   ctx.globalAlpha=Math.min(1,fade*(fx.kind==='pc'?.20*Math.max(0,1-t*5):fx.kind==='spin'?.19*Math.max(0,1-t*4):.15));
+   ctx.fillStyle=col;ctx.fillRect(0,0,300,600);
+  }
+  if(fx.kind==='drop'){
+   const x=fx.x,y=Math.max(12,Math.min(594,fx.y));
+   const g=ctx.createRadialGradient(x,y,0,x,y,140*t+36);
+   g.addColorStop(0,'#fff9');g.addColorStop(.20,col+'99');g.addColorStop(1,col+'00');
+   ctx.globalAlpha=.65*fade;ctx.fillStyle=g;ctx.fillRect(x-170,y-110,340,220);
+   ctx.strokeStyle='#ffffff';ctx.globalAlpha=fade;ctx.lineWidth=4*(1-t)+.8;
+   ctx.beginPath();ctx.moveTo(Math.max(0,x-10-155*t),y);ctx.lineTo(Math.min(300,x+10+155*t),y);ctx.stroke();
+   for(let i=0;i<7;i++){const off=(i-3)*12;ctx.strokeStyle=i%2?col:'#f1faff';ctx.globalAlpha=fade*.68;ctx.beginPath();ctx.moveTo(x+off*.6,y);ctx.lineTo(x+off*.6+(i-3)*13*t,y-Math.abs(off)*.32*t-30*t);ctx.stroke();}
+  }
+  if(fx.kind==='clear'){
+   for(const row of fx.rows){const y=(row-(H-V)+.5)*CELL;if(y<0||y>600)continue;
+    ctx.globalAlpha=fade*.72;ctx.fillStyle=col;ctx.fillRect(0,y-13,300,26);
+    const sweep=-90+420*t;
+    ctx.fillStyle='#ffffff';ctx.globalAlpha=fade;ctx.fillRect(sweep,y-16,Math.max(0,85*(1-t)),32);
+    ctx.strokeStyle='#faffff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(300,y);ctx.stroke();
    }
-   if(fx.kind==='drop'||fx.kind==='spin'||fx.kind==='pc'||fx.kind==='attack'){
-     const px=fx.kind==='pc'?150:fx.kind==='attack'?260:fx.x;
-     const py=fx.kind==='pc'?300:fx.kind==='attack'?290:fx.y;
-     ctx.fillStyle=color;
-     for(const a of fx.particles){if(t>a.life)continue;
-       ctx.globalAlpha=opacity*Math.max(0,1-t/a.life);
-       const x=px+a.vx*t*2,y=py+a.vy*t*2+a.vy*t*t*.4;
-       ctx.fillRect(x,y,a.size,a.size);
-     }
+  }
+  if(fx.kind==='spin'||fx.kind==='pc'){
+   const x=fx.kind==='pc'?150:Math.max(54,Math.min(246,fx.x));
+   const y=fx.kind==='pc'?300:Math.max(150,Math.min(380,fx.y));
+   ctx.strokeStyle=col;ctx.lineWidth=3.5*(1-t)+.8;ctx.globalAlpha=fade;
+   for(let j=0;j<(fx.kind==='pc'?4:3);j++){
+    const rad=25+j*30+145*t;ctx.beginPath();ctx.arc(x,y,rad,-Math.PI*.73+4.1*t+j*.7,Math.PI*.72+2.2*t+j*.45);ctx.stroke();
    }
+   for(let i=0;i<10;i++){
+    const ang=(i/10)*Math.PI*2+t*2.5,inner=30+90*t,outer=inner+28+32*(1-t);
+    ctx.strokeStyle=i%2?'#ffffff':col;ctx.globalAlpha=fade*(i%2?.60:.8);ctx.lineWidth=fx.kind==='pc'?2.4:1.6;
+    ctx.beginPath();ctx.moveTo(x+Math.cos(ang)*inner,y+Math.sin(ang)*inner);
+    ctx.lineTo(x+Math.cos(ang)*outer,y+Math.sin(ang)*outer);ctx.stroke();
+   }
+   ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
+   const big=fx.kind==='pc';ctx.font=`1000 ${big?42:38}px system-ui, sans-serif`;
+   const label=big?'PERFECT':(fx.type||'T')+'-SPIN'+(fx.mini?' MINI':'');ctx.lineWidth=5;ctx.strokeStyle='#07101b';
+   ctx.globalAlpha=fade*(t<.32?1:t<.7?.92:.65);
+   const labelY=big?280:260;ctx.strokeText(label,150,labelY,288);
+   ctx.fillStyle=big?'#fff3aa':'#f2c1ff';ctx.shadowColor=col;ctx.shadowBlur=16;ctx.fillText(label,150,labelY,288);
+   ctx.shadowBlur=0;
+   if(big){ctx.font='1000 37px system-ui';ctx.strokeText('CLEAR!',150,324);ctx.fillText('CLEAR!',150,324);}
+  }
+  if(fx.kind==='attack'){
+   for(let j=0;j<5;j++){const y=60+j*115,shift=340*t;
+    ctx.strokeStyle=j%2?'#fff':'#76e8ff';ctx.lineWidth=6-4*t;
+    ctx.globalAlpha=fade*.85;ctx.beginPath();ctx.moveTo(300-shift,y+30);ctx.lineTo(415-shift,y-32);ctx.stroke();}
+  }
+  if(fx.kind==='garbage'){
+   ctx.strokeStyle='#ff638f';ctx.globalAlpha=fade;ctx.lineWidth=2+7*(1-t);
+   ctx.strokeRect(4,4,292,592);
+  }
+  if(['drop','spin','pc','attack'].includes(fx.kind)){
+   const x=fx.kind==='pc'?150:fx.kind==='attack'?260:fx.x;
+   const y=fx.kind==='pc'?300:fx.kind==='attack'?290:fx.y;
+   for(const a of fx.particles){if(t>a.life)continue;
+    ctx.globalAlpha=fade*Math.max(0,1-t/a.life);ctx.fillStyle=(a.size%3===0)?'#fff':col;
+    const px=x+a.vx*t*3,py=y+a.vy*t*3+90*t*t;
+    ctx.fillRect(px,py,a.size*(1-t*.6),a.size*(1-t*.6));
+   }
+  }
+  ctx.restore();
  }
- ctx.restore();p.effects.length=next;
+ ctx.restore();p.effects=remaining;
 }
 function renderBoard(p,now){const ctx=boardCtx[p.i];ctx.clearRect(0,0,300,600);ctx.fillStyle='#0a1121';ctx.fillRect(0,0,300,600);
 ctx.strokeStyle='#18243a';ctx.lineWidth=.65;for(let x=1;x<W;x++){ctx.beginPath();ctx.moveTo(x*CELL+.5,0);ctx.lineTo(x*CELL+.5,600);ctx.stroke();}for(let y=1;y<V;y++){ctx.beginPath();ctx.moveTo(0,y*CELL+.5);ctx.lineTo(300,y*CELL+.5);ctx.stroke();}
@@ -515,7 +632,7 @@ if(evt.dataset.display!==eventKey){evt.dataset.display=eventKey;evt.textContent=
  if(active){const s=document.createElement('span');s.className='sub';s.textContent=p.sub;evt.appendChild(s);}}
 
 }
-window.TetrisDuel={getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats}}),attackAmount};
+window.TetrisDuel={getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
 updateScore();queueFill(players[0]);renderMini(players[0]);renderMini(players[1]);setOverlay(0,'ONLINE','방을 만들거나 참가해');setOverlay(1,'WAITING','상대 플레이어');requestAnimationFrame(loop);
 })();
 </script></body></html>
