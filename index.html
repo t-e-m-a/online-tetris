@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090c14">
-<title>TETRISDUAL</title>
+<title>TetrisDuel — Online Tetris</title>
 <style>
 :root{color-scheme:dark;--bg:#080c15;--surface:#11192a;--text:#edf3ff;--muted:#8091aa;--border:#253248;--cyan:#68d7ff;--pink:#f294cd}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Pretendard,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
@@ -44,6 +44,17 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 }
 @media(max-width:520px){.station{--compact-side:30px;--compact-gap:2px}.solo-mode .station{--compact-side:58px}}
 @media(max-height:680px) and (min-width:801px){.station{--compact-board:min(225px,max(100px,calc((100dvh - 375px)/2)))}}
+/* A compact, optional custom sound file loader; all assets stay in local browser storage. */
+.soundpack{border:1px solid var(--border);border-radius:8px;background:#101929;min-width:150px}
+.soundpack summary{font-size:11px;font-weight:800;color:#b6cbe0;cursor:pointer;list-style:none;padding:8px 13px}
+.soundpack summary::-webkit-details-marker{display:none}.soundpack summary::after{content:' ▾';color:#7e9db7}.soundpack[open] summary::after{content:' ▴'}
+.soundpack[open]{flex:1 0 100%;max-width:840px}
+.soundpack-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.sound-slot{display:grid;gap:5px;font-size:11px;color:#b7cbe0}
+.sound-slot input[type=file]{width:100%;min-width:0;font-size:10px;color:#8db1c8}
+.sound-slot .file-status{font-size:9px;min-height:12px;color:#82e1ed;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sound-slot .sfx-preview{justify-self:start;font-size:10px;padding:5px 8px}
+.soundpack-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;flex-wrap:wrap}
+.soundpack-actions .status{font-size:10px;color:#8ca0b9}
 /* Stable HUD: text effects never change the game area height. */
 .event{height:34px;min-height:34px;max-height:34px;overflow:hidden;line-height:15px}
 #restartHold{width:64px;height:5px;border-radius:99px;background:#29364c;display:inline-block;overflow:hidden;vertical-align:middle;flex-shrink:0}
@@ -53,7 +64,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 <body>
 <main class="shell">
 <header class="mast">
-  <div class="brand">TETRIS<span>DUAL</span></div>
+  <div class="brand">Tetris<span>Duel</span></div>
   <div class="actions"><div class="mode-tabs" role="group" aria-label="게임 모드"><button id="modeOnline" class="mode-tab selected" aria-pressed="true">온라인 대전</button><button id="modeSolo" class="mode-tab" aria-pressed="false">싱글 연습</button></div><button class="btn soundbtn" id="soundBtn" aria-label="사운드 켜기/끄기" title="사운드">♪</button></div>
 </header>
 <section id="onlinePanel" class="online-panel">
@@ -108,6 +119,10 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
   <label class="setting">타격감 <strong id="fxVal">강함</strong><input id="fx" type="range" min="0" max="3" step="1" value="3"><span class="setting-explain">0 끔 · 1 약함 · 2 보통 · 3 강함</span></label>
   <label class="setting">효과음 <strong id="volumeVal">70%</strong><input id="volume" type="range" min="0" max="100" step="5" value="70"><span class="setting-explain">효과음 음량</span></label>
  </div><div class="setting-bottom"><span id="settingSaved" class="settings-foot">자동 저장</span><button class="btn" type="button" id="resetHandling">기본값 복원</button></div>
+ </div></details>
+ <details class="soundpack" id="soundpackPanel"><summary>효과음 설정</summary><div class="details-body">
+  <div id="soundpackGrid" class="soundpack-grid"></div>
+  <div class="soundpack-actions"><span id="soundpackStatus" class="status">사용 가능한 효과음 파일을 직접 지정할 수 있어. 등록한 파일은 이 브라우저에만 저장돼.</span><button type="button" id="soundpackClear" class="btn">파일 초기화</button></div>
  </div></details>
 </div>
 </main>
@@ -181,6 +196,55 @@ try{const storedSound=persistentStore.getItem('tetrisdual_sound_v15');if(storedS
 function updateSoundUi(){el('soundBtn').style.color=sound?'#5ff0ff':'#72839a';el('soundBtn').textContent=sound?'♪':'♪̸';el('soundBtn').title=sound?'소리 켜짐':'소리 꺼짐';el('soundBtn').setAttribute('aria-pressed',String(sound));}
 el('soundBtn').onclick=()=>{sound=!sound;updateSoundUi();try{persistentStore.setItem('tetrisdual_sound_v15',sound?'1':'0');}catch{}};
 updateSoundUi();
+// Optional personal sound bank. No third-party recordings are bundled or remotely fetched.
+// Importing audio requires the user to hold permission for that use.
+const CUSTOM_SOUNDS=[
+ ['rotate','회전'],['hold','홀드'],['harddrop','하드 드롭'],
+ ['clear1','Single'],['clear2','Double'],['clear3','Triple'],['clear4','Tetris (4줄)'],
+ ['spin','T-Spin / 스핀'],['pc','Perfect Clear'],['attack','공격'],['garbage','가비지'],
+ ['undo','되돌리기'],['restart','연습 재시작'],
+ ['victory','라운드 승리'],['matchwin','최종 승리'],['defeat','패배']
+];
+const customSoundBuffers=new Map();
+const SOUND_DB='tetrisdual_personal_sfx',SOUND_STORE='samples';
+let soundDBPromise=null;
+function soundDB(){if(!('indexedDB' in window))return Promise.resolve(null);
+ if(!soundDBPromise)soundDBPromise=new Promise(resolve=>{try{const req=indexedDB.open(SOUND_DB,1);
+   req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(SOUND_STORE))req.result.createObjectStore(SOUND_STORE);};
+   req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null);req.onblocked=()=>resolve(null);
+ }catch{resolve(null);}});return soundDBPromise;
+}
+async function savePersonalSample(id,data){const db=await soundDB();if(!db)return false;
+ return new Promise(resolve=>{try{const tx=db.transaction(SOUND_STORE,'readwrite');tx.objectStore(SOUND_STORE).put(data,id);tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);}catch{resolve(false);}});
+}
+async function clearPersonalSamples(){customSoundBuffers.clear();const db=await soundDB();if(db){await new Promise(resolve=>{try{const tx=db.transaction(SOUND_STORE,'readwrite');tx.objectStore(SOUND_STORE).clear();tx.oncomplete=resolve;tx.onerror=resolve;}catch{resolve();}});} for(const [key] of CUSTOM_SOUNDS)updatePersonalSlot(key,'기본 효과음');el('soundpackStatus').textContent='등록된 파일을 삭제했어.';}
+async function decodePersonalSample(data){const ctx=engineAudio() || (audio || new (window.AudioContext||window.webkitAudioContext)());if(!ctx)throw Error('브라우저가 오디오 재생을 지원하지 않아.');const buf=await ctx.decodeAudioData(data.slice(0));if(buf.duration>15)throw Error('15초 이하의 효과음만 사용할 수 있어.');return buf;}
+function updatePersonalSlot(id,message){const target=el('soundfile_'+id);if(target)target.textContent=message;}
+async function importPersonalSample(id,file){if(!file)return;if(file.size>6*1024*1024){updatePersonalSlot(id,'6MB 초과');return;}
+ try{const data=await file.arrayBuffer();const buf=await decodePersonalSample(data);
+   customSoundBuffers.set(id,buf);const saved=await savePersonalSample(id,{data,name:file.name});
+   updatePersonalSlot(id,(saved?'저장됨: ':'현재 탭만: ')+file.name);
+ }catch(e){updatePersonalSlot(id,'오디오 형식 오류');el('soundpackStatus').textContent=String(e?.message||e);}
+}
+async function restorePersonalSamples(){const db=await soundDB();if(!db)return;
+ for(const [id] of CUSTOM_SOUNDS){try{const saved=await new Promise(resolve=>{const tx=db.transaction(SOUND_STORE,'readonly');const req=tx.objectStore(SOUND_STORE).get(id);req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null);});
+   if(saved?.data){customSoundBuffers.set(id,await decodePersonalSample(saved.data));updatePersonalSlot(id,'등록됨: '+saved.name);}
+ }catch{updatePersonalSlot(id,'파일 읽기 실패');}}
+}
+function playPersonalSample(id){if(!sound||volume<=0)return false;const buf=customSoundBuffers.get(id);if(!buf)return false;
+ const ctx=engineAudio();if(!ctx)return false;
+ try{const source=ctx.createBufferSource();source.buffer=buf;source.connect(master);source.start();return true;}catch{return false;}
+}
+for(const [key,label] of CUSTOM_SOUNDS){const wrap=document.createElement('label');wrap.className='sound-slot';
+ const title=document.createElement('span');title.textContent=label;
+ const input=document.createElement('input');input.type='file';input.accept='audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac';input.setAttribute('aria-label',label+' 효과음 파일');
+ const status=document.createElement('span');status.className='file-status';status.id='soundfile_'+key;status.textContent='기본 효과음';
+ const preview=document.createElement('button');preview.className='sfx-preview btn';preview.type='button';preview.textContent='▶ 미리듣기';preview.setAttribute('aria-label',label+' 미리듣기');preview.onclick=()=>{if(!sound){sound=true;updateSoundUi();}impactSound(key==='harddrop'?'drop':key.startsWith('clear')?'clear':key,key.startsWith('clear')?Number(key.slice(-1)):1);};
+ input.addEventListener('change',async()=>{await importPersonalSample(key,input.files?.[0]);input.value='';});
+ wrap.append(title,input,status,preview);el('soundpackGrid').append(wrap);
+}
+el('soundpackClear').onclick=clearPersonalSamples;
+restorePersonalSamples();
 // Original synthesized arcade-style sounds, not ripped TETR.IO assets.
 // Layered transient + sub + filtered noise makes the hit audible without clipping.
 const VOLUME_KEY='tetrisdual_volume_v16';let volume=70,master=null,limiter=null,noiseBuffer=null,lastTickAt=0;
@@ -211,30 +275,95 @@ function hiss(duration=.07,gain=.16,cutoff=2200,delay=0){const a=engineAudio();i
  env.gain.setValueAtTime(.0001,at);env.gain.linearRampToValueAtTime(gain,at+.004);env.gain.exponentialRampToValueAtTime(.0001,at+duration);
  source.connect(filter);filter.connect(env);env.connect(master);source.start(at);source.stop(at+duration+.01);
  }catch{}}
-// Existing rotation and hold code calls beep; keep those actions understated.
+// A tiny per-key transient, intentionally unlike any third-party recording.
 function beep(freq=420,len=.04,type='triangle',gain=.05,endFreq=null){const now=performance.now();if(now-lastTickAt<14)return;lastTickAt=now;tone(freq,len,type,Math.min(.12,gain*2.6),endFreq||Math.max(80,freq*.82));}
-function impactSound(kind,power=1){if(!sound)return;const n=Math.min(4,Math.max(1,Number(power)||1));
- if(kind==='drop'){
-  tone(188,.15,'sine',.7,48);tone(860,.037,'triangle',.23,180);hiss(.07,.43,1750);
+// Crisp filtered pulse, warm sub, spectral sweep and bell-like harmonics.
+// These events are procedurally synthesized and contain NO extracted game audio.
+function zap(freq=540,end=210,duration=.07,gain=.14,delay=0,bright=2400){const a=engineAudio();if(!a)return;
+ try{const at=a.currentTime+delay,o=a.createOscillator(),f=a.createBiquadFilter(),g=a.createGain();
+  o.type='square';o.frequency.setValueAtTime(Math.max(30,freq),at);o.frequency.exponentialRampToValueAtTime(Math.max(30,end),at+duration);
+  f.type='lowpass';f.frequency.setValueAtTime(bright,at);f.frequency.exponentialRampToValueAtTime(Math.max(350,bright*.36),at+duration);f.Q.value=.6;
+  g.gain.setValueAtTime(.0001,at);g.gain.linearRampToValueAtTime(gain,at+.0015);g.gain.exponentialRampToValueAtTime(.0001,at+duration);
+  o.connect(f);f.connect(g);g.connect(master);o.start(at);o.stop(at+duration+.025);
+ }catch{}}
+function swish(duration=.075,gain=.18,start=1600,end=4500,delay=0){const a=engineAudio();if(!a||!noiseBuffer)return;
+ try{const at=a.currentTime+delay,s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=noiseBuffer;
+  f.type='bandpass';f.frequency.setValueAtTime(Math.max(80,start),at);f.frequency.exponentialRampToValueAtTime(Math.max(80,end),at+duration);f.Q.value=.85;
+  g.gain.setValueAtTime(.0001,at);g.gain.linearRampToValueAtTime(gain,at+Math.min(.012,duration*.3));g.gain.exponentialRampToValueAtTime(.0001,at+duration);
+  s.connect(f);f.connect(g);g.connect(master);s.start(at);s.stop(at+duration+.01);
+ }catch{}}
+function ping(freq=620,delay=0,duration=.16,gain=.10){
+ tone(freq,duration,'sine',gain,Math.max(30,freq*.995),delay);
+ tone(freq*1.99,duration*.57,'triangle',gain*.29,Math.max(30,freq*1.97),delay);
+}
+function bass(freq=132,to=45,delay=0,gain=.37,duration=.145){tone(freq,duration,'sine',gain,to,delay);}
+let lastRotateSound=0;
+
+function impactSound(kind,power=1){
+ if(!sound)return;
+ const n=Math.min(4,Math.max(1,Number(power)||1));
+ const sampleKey=kind==='drop'?'harddrop':kind==='clear'?'clear'+n:kind;
+ if(playPersonalSample(sampleKey))return;
+ if(kind==='matchwin'&&playPersonalSample('victory'))return;
+ if(kind==='rotate'){
+  const t=performance.now();if(t-lastRotateSound<19)return;lastRotateSound=t;
+  zap(630,390,.028,.052,0,1800);swish(.024,.028,2200,3100);
+ }else if(kind==='hold'){
+  zap(360,550,.055,.075,0,1250);ping(560,.035,.055,.041);
+  swish(.045,.042,1200,3200);
+ }else if(kind==='drop'){
+  // Percussive, tight ground contact: transient + weight + minimal after-ring.
+  swish(.026,.17,5200,900);zap(1110,185,.048,.14,0,4200);
+  bass(186,47,0,.50,.125);tone(400,.030,'triangle',.095,185,.005);
  }else if(kind==='clear'){
-  tone(180+n*22,.14,'sine',.48,78);hiss(.085+n*.012,.30+n*.06,2900);
-  tone(420+n*80,.125,'triangle',.17+n*.03,680+n*120,.025);
-  if(n>=4){tone(210,.22,'sawtooth',.24,95,.025);tone(980,.17,'sine',.18,1440,.075);}
+  // Stacked clears have increasingly brighter, higher and more harmonically rich accents.
+  const v=n/4;
+  swish(.052+n*.013,.09+.045*n,1150+n*360,5500);
+  bass(120+n*14,54+n*3,0,.18+.035*n,.09+n*.014);
+  zap(370+n*120,180+n*110,.065+n*.012,.095+.027*n,0,3300+n*260);
+  ping(520+n*85,.032,.11+.020*n,.055+.015*n);
+  if(n>=3){ping(770+n*70,.085,.15,.075);swish(.072,.07,2900,6300,.055);}
+  if(n===4){zap(920,1720,.145,.10,.088,4100);ping(1180,.145,.22,.085);}
  }else if(kind==='spin'){
-  hiss(.07,.18,4900);tone(520,.14,'triangle',.24,1150);
-  tone(780,.22,'sine',.22,1540,.055);tone(1200,.24,'triangle',.14,1900,.10);
+  // An upward rotation callout with mechanical bite and bright trailing chime.
+  swish(.11,.19,900,6800);zap(310,1220,.11,.12,0,3700);
+  ping(830,.058,.24,.105);ping(1245,.15,.24,.105);bass(150,65,.017,.17,.13);
+  if(n>=2)ping(1660,.23,.18,.065);
  }else if(kind==='attack'){
-  tone(310,.19,'sawtooth',.20,78);hiss(.12,.26,4800);
-  tone(750,.105,'triangle',.14,1350,.045);
+  swish(.12,.20,950,6600);zap(680,175,.12,.15,0,4600);
+  bass(138,49,.012,.30,.17);ping(1080,.042,.13,.09);
+  if(n>=3)ping(1440,.110,.13,.05);
  }else if(kind==='pc'){
-  tone(142,.27,'sine',.62,61);hiss(.21,.58,5700);
-  [587,740,880,1175].forEach((f,i)=>{tone(f,.20,'triangle',.26, f*1.10,i*.075);tone(f*2,.11,'sine',.075,null,i*.075+.035);});
+  // A larger celebratory event that keeps its own original tune and timbre.
+  bass(142,40,0,.58,.27);swish(.23,.22,700,7800);
+  zap(280,1120,.18,.12,0,5000);
+  const notes=[523.25,659.25,783.99,1046.5,1318.5];
+  notes.forEach((f,i)=>{ping(f,.04+i*.075,.27,.11);if(i%2===0)swish(.09,.035,2700,6900,.045+i*.075);});
+  ping(1568,.48,.38,.16);tone(262,.26,'sine',.18,262,.43);
  }else if(kind==='garbage'){
-  tone(148,.18,'sawtooth',.25,62);hiss(.14,.35,1400);
+  swish(.12,.12,3800,700);zap(290,92,.15,.16,0,1300);
+  bass(97,45,.01,.34,.20);
  }else if(kind==='undo'){
-  tone(610,.085,'sine',.16,420);tone(420,.10,'triangle',.13,260,.035);
+  swish(.06,.05,4200,800);zap(720,390,.060,.060);
+  ping(390,.035,.10,.055);
  }else if(kind==='restart'){
-  tone(260,.11,'triangle',.18,450);tone(530,.14,'sine',.19,840,.08);
+  swish(.12,.07,500,3800);zap(320,850,.10,.095);
+  ping(655,.09,.20,.09);ping(980,.16,.19,.09);
+ }else if(kind==='victory'){
+  const notes=[523.25,659.25,783.99,1046.5];
+  swish(.11,.095,1600,6000);
+  notes.forEach((f,i)=>{ping(f,i*.100,.34,.13);tone(f/2,.19,'triangle',.055,f/2,i*.100);});
+  ping(1318.5,.43,.38,.14);
+ }else if(kind==='matchwin'){
+  const notes=[392,523.25,659.25,783.99,1046.5,1318.5];
+  swish(.15,.14,1200,7300);bass(130,61,0,.23,.19);
+  notes.forEach((f,i)=>{ping(f,i*.085,.36,.115);tone(f/2,.23,'triangle',.065,f/2,i*.085);});
+  [784,988,1318.5].forEach(f=>ping(f,.58,.46,.11));
+  swish(.22,.105,2600,7100,.52);
+ }else if(kind==='defeat'){
+  swish(.12,.075,3100,430);
+  [392,311.13,246.94].forEach((f,i)=>{zap(f,f*.67,.18,.082,i*.14,1000);tone(f,.19,'triangle',.070,f*.79,i*.14);});
+  bass(110,53,.30,.24,.24);
  }
 }
 function rotateMat(m,dir){if(dir===2)return rotateMat(rotateMat(m,1),1);const n=m.length,r=Array.from({length:n},()=>Array(n).fill(0));for(let y=0;y<n;y++)for(let x=0;x<n;x++)r[dir===1?x:n-1-x][dir===1?n-1-y:y]=m[y][x];return r;}
@@ -302,6 +431,7 @@ function onNetwork(msg){
  if(msg.type==='roundEnd'){
    status='over';resetInputs();readySent=false;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;
    const mine=msg.winner===seat;
+   impactSound(mine?(msg.matchOver?'matchwin':'victory'):'defeat');
    setOverlay(0,mine?'WIN':'TOP OUT',mine?'라운드 승리':'패배',true,mine?'win':'loss');
    setOverlay(1,mine?'TOP OUT':'WIN',mine?'상대 패배':'상대 승리',true,mine?'loss':'win');
    el('roundText').textContent=msg.matchOver?(mine?'MATCH WINNER':'MATCH LOST'):'ROUND '+round+' · '+(mine?'WIN':'LOSS');
@@ -422,9 +552,9 @@ function act(p,kind,now){if(status!=='running'||p.dead||!p.piece)return;const t=
 function touch(p,now){const t=p.piece;if(!t)return;if(!valid(p,t.m,t.x,t.y+1)){if(!p.groundAt)p.groundAt=now;else if(p.lockResets<15){p.groundAt=now;p.lockResets++;}}else p.groundAt=0;}
 function move(p,dx,dy,now){const t=p.piece;if(!t||!valid(p,t.m,t.x+dx,t.y+dy))return false;t.x+=dx;t.y+=dy;t.lastRotate=false;if(dy>0) p.moved++;touch(p,now);return true;}
 function sonicDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}if(count){p.piece.lastRotate=false;p.moved+=count;}touch(p,now);}
-function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;beep(470,.03,'triangle',.03,590);return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
-const tbl=dir===2?KICKS180:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);beep(470,.03,'triangle',.03,600);return;}}}
-function doHold(p){if(!p.piece||p.holdUsed)return;const current=p.piece.type;const old=p.hold;p.hold=current;p.piece=null;spawn(p,old);p.holdUsed=true;beep(320,.07,'triangle',.07,540);renderMini(p);}
+function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;impactSound('rotate');return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
+const tbl=dir===2?KICKS180:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);impactSound('rotate');return;}}}
+function doHold(p){if(!p.piece||p.holdUsed)return;const current=p.piece.type;const old=p.hold;p.hold=current;p.piece=null;spawn(p,old);p.holdUsed=true;impactSound('hold');renderMini(p);}
 function hardDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}
  const t=p.piece;const blocks=[];for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c])blocks.push([(t.x+c+.5)*CELL,(t.y+r-(H-V)+.5)*CELL]);
  const visible=blocks.filter(b=>b[1]>=0&&b[1]<600);
@@ -490,7 +620,7 @@ function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=
  }pkt.lines-=count;}
 p.incoming=p.incoming.filter(pkt=>pkt.lines>0);if(added){p.event='GARBAGE +'+added;p.sub='상대 공격이 들어왔어';p.eventUntil=now+900;p.glow=now+180;addEffect(p,'garbage',now,{power:added});impactSound('garbage');}
 }
-function roundEnd(loser){if(status!=='running'||loser!==0)return;resetInputs();if(mode==='solo'){status='soloOver';setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
+function roundEnd(loser){if(status!=='running'||loser!==0)return;resetInputs();if(mode==='solo'){status='soloOver';impactSound('defeat');setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
 function updateRepeat(p,direction,now){const v=p.repeat[direction];if(!p.held[direction])return;if(now-v.at<config.das||now<p.dcdUntil)return;if(config.arr===0){while(move(p,direction==='left'?-1:1,0,now)){}v.done=true;return;}if(!v.done){move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=now;return;}if(now-v.last<config.arr)return;let count=0;while(now-v.last>=config.arr&&count++<20){const moved=move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=v.last+config.arr||now;if(!moved)break;}}
 function loop(now){requestAnimationFrame(loop);
 if(rHoldAt&&mode==='solo'&&!rHoldTriggered){const progress=Math.max(0,Math.min(1,(now-rHoldAt)/R_HOLD_MS));el('restartFill').style.width=(progress*100)+'%';if(progress>=1){rHoldTriggered=true;startSolo();impactSound('restart');el('restartFill').style.width='100%';}}
