@@ -59,13 +59,26 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 .event{height:34px;min-height:34px;max-height:34px;overflow:hidden;line-height:15px}
 #restartHold{width:64px;height:5px;border-radius:99px;background:#29364c;display:inline-block;overflow:hidden;vertical-align:middle;flex-shrink:0}
 #restartFill{display:block;height:100%;width:0;background:linear-gradient(90deg,#69d5f3,#f1a9df);border-radius:99px}
+.mode-tabs{flex-wrap:wrap;justify-content:center}
+.challenge-mode .player.one .side .sidetitle:not(:first-child),.challenge-mode .player.one .side .side-number,.challenge-mode .player.one .side .surge{display:none}
+.challenge-mode .station{--compact-board:min(300px,max(105px,calc((100dvh - 430px)/2)));--compact-side:70px;grid-template-columns:var(--compact-side) minmax(0,1fr) var(--compact-side)}
+@media(max-width:800px){.challenge-mode .station{--compact-board:min(310px,max(100px,calc((100dvh - 450px)/2)));--compact-side:66px}}
+@media(max-width:520px){.challenge-mode .station{--compact-side:58px}}
+.challenge-metrics{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline;margin-top:7px;padding-top:7px;border-top:1px solid #25364b;font-variant-numeric:tabular-nums}
+.challenge-metrics .metric{display:flex;gap:5px;align-items:baseline;white-space:nowrap}
+.challenge-metrics .metric b{font-size:14px;color:#e6f4ff}
+.challenge-metrics .metric span{font-size:10px;color:#8a9eb6;font-weight:750}
+.challenge-metrics .metric.goal b{color:#80e7ff}
+.challenge-metrics .metric.points b{color:#ffe496}
+@media(max-width:800px){.challenge-metrics{gap:10px}.mode-tab{padding:6px 9px}}
+@media(max-width:540px){.actions{width:100%;justify-content:space-between}.mode-tab{padding:6px 7px;font-size:10px}.challenge-metrics{gap:8px}.challenge-metrics .metric b{font-size:12px}}
 </style>
 </head>
 <body>
 <main class="shell">
 <header class="mast">
   <div class="brand">Tetris<span>Duel</span></div>
-  <div class="actions"><div class="mode-tabs" role="group" aria-label="게임 모드"><button id="modeOnline" class="mode-tab selected" aria-pressed="true">온라인 대전</button><button id="modeSolo" class="mode-tab" aria-pressed="false">싱글 연습</button></div><button class="btn soundbtn" id="soundBtn" aria-label="사운드 켜기/끄기" title="사운드">♪</button></div>
+  <div class="actions"><div class="mode-tabs" role="group" aria-label="게임 모드"><button id="modeOnline" class="mode-tab selected" aria-pressed="true">온라인 대전</button><button id="modeSolo" class="mode-tab" aria-pressed="false">자유 연습</button><button id="modeSprint" class="mode-tab" aria-pressed="false">40 LINES</button><button id="modeBlitz" class="mode-tab" aria-pressed="false">BLITZ</button></div><button class="btn soundbtn" id="soundBtn" aria-label="사운드 켜기/끄기" title="사운드">♪</button></div>
 </header>
 <section id="onlinePanel" class="online-panel">
  <div class="online-grid">
@@ -79,7 +92,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
  <div class="online-status"><span id="netStatus">방을 만들거나 코드로 참가해</span><strong id="roomDisplay"></strong></div>
 </section>
 <section id="practicePanel" class="practice-panel" hidden>
- <div class="practice-grid"><button class="btn primary" id="soloStart">연습 시작</button><button class="btn" id="soloPause" disabled>일시정지</button><span id="soloStatus" class="practice-status">오프라인 연습</span><span id="restartHold" title="R 키 길게 누르기"><span id="restartFill"></span></span></div>
+ <div class="practice-grid"><button class="btn primary" id="soloStart">연습 시작</button><button class="btn" id="soloPause" disabled>일시정지</button><span id="soloStatus" class="practice-status">오프라인 연습</span><span id="restartHold" title="자유 연습: R 길게 누르기"><span id="restartFill"></span></span></div><div id="challengeMetrics" class="challenge-metrics" hidden></div>
 </section>
 <div id="match" class="match">
  <div class="team"><span class="dot"></span><strong>YOU</strong><div class="points" id="score1"></div></div>
@@ -109,7 +122,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
   <div class="keyrow"><span>소프트 드롭</span><div class="keycaps"><span class="keycap">↓</span></div></div>
   <div class="keyrow"><span>하드 드롭</span><div class="keycaps"><span class="keycap">Space</span></div></div>
   <div class="keyrow"><span>회전</span><div class="keycaps"><span class="keycap">Z</span><span class="keycap">X</span><span class="keycap">↑</span><span class="keycap">A (180°)</span></div></div>
-  <div class="keyrow"><span>홀드</span><div class="keycaps"><span class="keycap">C</span><span class="keycap">Shift</span></div></div><div class="keyrow"><span>연습</span><div class="keycaps"><span class="keycap">R 길게</span><span class="keycap">Ctrl+Z</span></div></div>
+  <div class="keyrow"><span>홀드</span><div class="keycaps"><span class="keycap">C</span><span class="keycap">Shift</span></div></div><div class="keyrow"><span>자유 연습</span><div class="keycaps"><span class="keycap">R 길게</span><span class="keycap">Ctrl+Z</span></div></div><div class="keyrow"><span>40 LINES / BLITZ</span><div class="keycaps"><span class="keycap">R 재시작</span></div></div>
  </div></details>
  <details class="options" id="config"><summary>감도 설정</summary><div class="details-body"><div class="settings-controls">
   <label class="setting">DAS <strong id="dasVal">6.5F</strong><input id="das" type="range" min="0" max="20" step="0.5" value="6.5"><span class="setting-explain">좌우 반복 시작 지연</span></label>
@@ -370,8 +383,16 @@ function rotateMat(m,dir){if(dir===2)return rotateMat(rotateMat(m,1),1);const n=
 function randomSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]||0x9e3779b9;}catch{return (Date.now()^Math.floor(Math.random()*4294967295))>>>0||0x9e3779b9;}}
 function nextRandom(p){let x=p.rng>>>0;x^=x<<13;x^=x>>>17;x^=x<<5;p.rng=x>>>0;return p.rng/4294967296;}
 function shuffleBag(p){const a=[...TYPES];for(let j=a.length-1;j>0;j--){const r=Math.floor(nextRandom(p)*(j+1));[a[j],a[r]]=[a[r],a[j]];}return a;}
-function newPlayer(i){return {i,rng:randomSeed(),grid:Array.from({length:H},()=>Array(W).fill(null)),queue:[],hold:null,holdUsed:false,piece:null,fallen:0,combo:-1,b2b:0,surge:0,lines:0,sent:0,blocked:0,pieces:0,spins:0,incoming:[],garbageHole:Math.floor(Math.random()*W),dead:false,event:'READY',sub:'',eventUntil:0,lastLock:0,moved:0,gravity:0,groundAt:0,lockResets:0,dcdUntil:0,repeat:{left:{at:0,last:0,done:false},right:{at:0,last:0,done:false}},held:{left:false,right:false,soft:false},glow:0,effects:[]};}
+function newPlayer(i){return {i,rng:randomSeed(),grid:Array.from({length:H},()=>Array(W).fill(null)),queue:[],hold:null,holdUsed:false,piece:null,fallen:0,combo:-1,b2b:0,surge:0,lines:0,sent:0,blocked:0,pieces:0,spins:0,perfectClears:0,blitzScore:0,softDropCells:0,hardDropCells:0,incoming:[],garbageHole:Math.floor(Math.random()*W),dead:false,event:'READY',sub:'',eventUntil:0,lastLock:0,moved:0,gravity:0,groundAt:0,lockResets:0,dcdUntil:0,repeat:{left:{at:0,last:0,done:false},right:{at:0,last:0,done:false}},held:{left:false,right:false,soft:false},glow:0,effects:[]};}
 let players=[newPlayer(0),newPlayer(1)],wins=[0,0],round=1,status='ready',roundStart=0,countdownAt=0,clockTime=0,feed=[],mode='online';
+const BLITZ_DURATION_MS=120000, SPRINT_LINES=40;
+const BLITZ_LEVEL_LINES=[0,3,8,15,24,35,48,63,80,99,120,144,170,198,228,260];
+const BLITZ_ROW_SECONDS=[1,.643,.404,.249,.150,.088,.0505,.0283,.0155,.00827,.00431,.00219,.00108,.00052,.00024];
+let challengeCountdownAt=0,challengeGoUntil=0,challengeResult='';
+const isChallenge=()=>mode==='sprint'||mode==='blitz';
+const isOffline=()=>mode!=='online';
+const blitzLevel=lines=>{let level=1;for(let i=1;i<BLITZ_LEVEL_LINES.length;i++)if(lines>=BLITZ_LEVEL_LINES[i])level=i+1;let threshold=260,required=34;while(lines>=threshold+required){threshold+=required;required+=2;level++;}return level;};
+const clockText=ms=>{const n=Math.max(0,Math.floor(ms));return String(Math.floor(n/60000)).padStart(2,'0')+':'+String(Math.floor(n/1000)%60).padStart(2,'0')+'.'+String(n%1000).padStart(3,'0');};
 let ws=null, room='',seat=-1, connected=false, readySent=false, gameStartTime=0, workerBase='', lastSnapshot=0;
 const UNDO_LIMIT=140, R_HOLD_MS=520;let soloUndo=[],rHoldAt=0,rHoldTriggered=false;
 // Send a compact, changed snapshot at most once per ~85ms.
@@ -500,26 +521,68 @@ function undoSolo(){
 }
 function resetRestartHold(){rHoldAt=0;rHoldTriggered=false;el('restartFill').style.width='0%';}
 
+function updateChallengeHud(){
+ const info=el('challengeMetrics');if(!isChallenge()){info.hidden=true;info.textContent='';return;}
+ info.hidden=false;const p=players[0],items=mode==='sprint'
+  ?[['LINES',Math.max(0,SPRINT_LINES-Math.min(SPRINT_LINES,p.lines)),'goal'],['TIME',clockText(clockTime),''],['PIECES',p.pieces,''],['PPS',((p.pieces*1000)/Math.max(1,clockTime)).toFixed(2),'']]
+  :[['SCORE',p.blitzScore.toLocaleString('en-US'),'points'],['LEVEL',blitzLevel(p.lines),''],['PERFECT CLEAR',p.perfectClears,'goal'],['LINES',p.lines,'']];
+ // Reuse stable elements and change text only, avoiding layout-induced board shake.
+ if(info.dataset.mode!==mode||info.children.length!==items.length){info.dataset.mode=mode;info.replaceChildren(...items.map(([label,,style])=>{const div=document.createElement('div');div.className='metric '+style;const n=document.createElement('span');n.textContent=label;const val=document.createElement('b');div.append(n,val);return div;}));}
+ items.forEach(([,value],i)=>{const n=info.children[i].querySelector('b');if(n.textContent!==String(value))n.textContent=value;});
+}
 function chooseMode(next){
  if(mode===next)return;
  if(ws){const old=ws;ws=null;try{old.close(1000,'Mode changed');}catch{}}
  mode=next;connected=false;readySent=false;room='';seat=-1;presence=[false,false];soloUndo=[];resetRestartHold();
- status=next==='solo'?'soloIdle':'lobby';wins=[0,0];round=1;clockTime=0;feed=[];
+ status=isOffline()?'soloIdle':'lobby';wins=[0,0];round=1;clockTime=0;feed=[];challengeResult='';
  players=[newPlayer(0),newPlayer(1)];queueFill(players[0]);resetInputs();
  lastStateSignature='';lastGridDigest='';
- el('feed').textContent='';el('clock').textContent='00:00';el('roomDisplay').textContent='';el('roomInput').value='';
- el('onlinePanel').hidden=next==='solo';el('practicePanel').hidden=next!=='solo';
- document.body.classList.toggle('solo-mode',next==='solo');
- el('modeOnline').classList.toggle('selected',next==='online');el('modeSolo').classList.toggle('selected',next==='solo');
- el('modeOnline').setAttribute('aria-pressed',String(next==='online'));el('modeSolo').setAttribute('aria-pressed',String(next==='solo'));
- el('roundText').textContent=next==='solo'?'자유 연습':'ROUND 1';
- el('middleMode').textContent=next==='solo'?'PRACTICE':'FIRST TO 3';
- el('soloStart').textContent='연습 시작';el('soloPause').textContent='일시정지';el('soloPause').disabled=true;
- if(next==='solo'){
-   el('soloStatus').textContent='오프라인 연습';setOverlay(0,'PRACTICE','연습 시작을 눌러줘');
+ el('feed').textContent='';el('clock').textContent=isChallenge()?(mode==='blitz'?'02:00.000':'00:00.000'):'00:00';el('roomDisplay').textContent='';el('roomInput').value='';
+ el('onlinePanel').hidden=isOffline();el('practicePanel').hidden=!isOffline();
+ document.body.classList.toggle('solo-mode',isOffline());document.body.classList.toggle('challenge-mode',isChallenge());
+ for(const [id,type] of [['modeOnline','online'],['modeSolo','solo'],['modeSprint','sprint'],['modeBlitz','blitz']]){
+  el(id).classList.toggle('selected',next===type);el(id).setAttribute('aria-pressed',String(next===type));
+ }
+ el('roundText').textContent=next==='solo'?'자유 연습':next==='sprint'?'40 LINES':next==='blitz'?'BLITZ':'ROUND 1';
+ el('middleMode').textContent=next==='solo'?'PRACTICE':next==='sprint'?'SPRINT':next==='blitz'?'120 SEC':'FIRST TO 3';
+ el('soloStart').textContent=next==='solo'?'연습 시작':isChallenge()?'시작':'연습 시작';
+ el('soloPause').textContent='일시정지';el('soloPause').disabled=true;
+ el('restartHold').hidden=next!=='solo';
+ el('apm0').nextElementSibling.textContent=isChallenge()?'PIECES':'APM';
+ if(isOffline()){
+   const title=next==='solo'?'PRACTICE':next==='sprint'?'40 LINES':'BLITZ';
+   const hint=next==='solo'?'연습 시작을 눌러줘':next==='sprint'?'40줄을 최대한 빠르게 제거':'2분 동안 최고 점수';
+   el('soloStatus').textContent=next==='solo'?'오프라인 연습':next==='sprint'?'40줄 스프린트':'2분 점수 경쟁';setOverlay(0,title,hint);
  }else{statusLine('방을 만들거나 코드로 참가해');setOverlay(0,'ONLINE','방 생성 또는 참가');setOverlay(1,'WAITING','상대 플레이어');}
- renderMini(players[0]);renderMini(players[1]);updateScore();updateRoom();
+ renderMini(players[0]);renderMini(players[1]);updateScore();updateRoom();updateChallengeHud();
  try{history.replaceState(null,'',location.pathname);}catch{}
+}
+function startChallenge(){
+ if(!isChallenge())return;
+ soloUndo=[];challengeResult='';status='challengeCountdown';players=[newPlayer(0),newPlayer(1)];resetInputs();
+ // STRIDE: prevent S/Z/O on the initial piece while retaining a real 7-bag.
+ do{players[0].queue=[];queueFill(players[0]);}while(['S','Z','O'].includes(players[0].queue[0]));
+ clockTime=0;feed=[];el('feed').textContent='';spawn(players[0]);renderMini(players[0]);renderMini(players[1]);
+ challengeCountdownAt=performance.now();challengeGoUntil=0;
+ setOverlay(0,'READY','');el('clock').textContent=mode==='blitz'?'02:00.000':'00:00.000';
+ el('roundText').textContent=mode==='sprint'?'40 LINES':'BLITZ';
+ el('soloStatus').textContent='READY · SET · GO';el('soloStart').textContent='다시 시작';
+ el('soloPause').disabled=true;updateChallengeHud();
+}
+function finishChallenge(reason,now=performance.now()){
+ if(!isChallenge()||!['running','challengeCountdown'].includes(status))return;
+ const p=players[0];
+ if(reason==='complete'&&mode==='sprint')clockTime=Math.max(0,now-roundStart);
+ if(reason==='timeout'&&mode==='blitz')clockTime=BLITZ_DURATION_MS;
+ status='challengeOver';challengeResult=reason;resetInputs();
+ const success=reason==='complete'||reason==='timeout';
+ const header=reason==='complete'?'40 LINES COMPLETE':reason==='timeout'?'TIME UP':'TOP OUT';
+ const detail=mode==='sprint'?`${Math.min(40,p.lines)} / 40 · ${clockText(clockTime)}`:`${p.blitzScore.toLocaleString('en-US')} POINTS · PC ${p.perfectClears}`;
+ setOverlay(0,header,detail,true,success?'win':'loss');
+ el('roundText').textContent=reason==='complete'?'COMPLETE':reason==='timeout'?'FINISHED':'GAME OVER';
+ el('soloStatus').textContent=reason==='complete'?'완료':reason==='timeout'?'2분 종료':'게임 오버';
+ el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;
+ impactSound(success?'victory':'defeat');updateChallengeHud();
 }
 function startSolo(){
  if(mode!=='solo')chooseMode('solo');
@@ -540,7 +603,9 @@ function toggleSoloPause(){
 }
 el('modeOnline').onclick=()=>chooseMode('online');
 el('modeSolo').onclick=()=>chooseMode('solo');
-el('soloStart').onclick=startSolo;
+el('modeSprint').onclick=()=>chooseMode('sprint');
+el('modeBlitz').onclick=()=>chooseMode('blitz');
+el('soloStart').onclick=()=>{if(isChallenge())startChallenge();else startSolo();};
 el('soloPause').onclick=toggleSoloPause;
 function queueFill(p){while(p.queue.length<12)p.queue.push(...shuffleBag(p));}
 function valid(p,m,x,y){for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++){if(!m[r][c])continue;const bx=x+c,by=y+r;if(bx<0||bx>=W||by>=H)return false;if(by>=0&&p.grid[by][bx])return false;}return true;}
@@ -551,7 +616,7 @@ function updateScore(){for(let i=0;i<2;i++){el('score'+(i+1)).innerHTML=Array.fr
 function act(p,kind,now){if(status!=='running'||p.dead||!p.piece)return;const t=p.piece;switch(kind){case 'left':case 'right':move(p,kind==='left'?-1:1,0,now);break;case 'soft':if(config.sdf===41)sonicDrop(p,now);break;case 'cw':case 'ccw':case 'flip':turn(p,kind==='cw'?1:kind==='ccw'?-1:2,now);break;case 'hard':hardDrop(p,now);break;case 'hold':doHold(p);break;}}
 function touch(p,now){const t=p.piece;if(!t)return;if(!valid(p,t.m,t.x,t.y+1)){if(!p.groundAt)p.groundAt=now;else if(p.lockResets<15){p.groundAt=now;p.lockResets++;}}else p.groundAt=0;}
 function move(p,dx,dy,now){const t=p.piece;if(!t||!valid(p,t.m,t.x+dx,t.y+dy))return false;t.x+=dx;t.y+=dy;t.lastRotate=false;if(dy>0) p.moved++;touch(p,now);return true;}
-function sonicDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}if(count){p.piece.lastRotate=false;p.moved+=count;}touch(p,now);}
+function sonicDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}if(count){p.piece.lastRotate=false;p.moved+=count;if(mode==='blitz'){p.softDropCells+=count;p.blitzScore+=count;}}touch(p,now);}
 function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;impactSound('rotate');return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
 const tbl=dir===2?KICKS180:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);impactSound('rotate');return;}}}
 function doHold(p){if(!p.piece||p.holdUsed)return;const current=p.piece.type;const old=p.hold;p.hold=current;p.piece=null;spawn(p,old);p.holdUsed=true;impactSound('hold');renderMini(p);}
@@ -559,7 +624,7 @@ function hardDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,
  const t=p.piece;const blocks=[];for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c])blocks.push([(t.x+c+.5)*CELL,(t.y+r-(H-V)+.5)*CELL]);
  const visible=blocks.filter(b=>b[1]>=0&&b[1]<600);
  if(visible.length){const x=visible.reduce((s,b)=>s+b[0],0)/visible.length,y=Math.max(...visible.map(b=>b[1]));addEffect(p,'drop',now,{x,y,type:t.type,power:Math.min(1.5,.8+count/22)});}
- if(count)t.lastRotate=false;impactSound('drop');lock(p,now);
+ if(count)t.lastRotate=false;if(mode==='blitz'){p.hardDropCells+=count;p.blitzScore+=count*2;}impactSound('drop');lock(p,now);
 }
 function classifySpin(p,t){if(!t.lastRotate)return null;const immobile=!valid(p,t.m,t.x,t.y-1)&&!valid(p,t.m,t.x-1,t.y)&&!valid(p,t.m,t.x+1,t.y);
 if(t.type==='T'){
@@ -576,15 +641,24 @@ return immobile?'mini':null;
 function clearRows(p){const rows=[];const board=p.grid.filter((row,y)=>{if(row.every(Boolean)){rows.push(y);return false;}return true;});while(board.length<H)board.unshift(Array(W).fill(null));p.grid=board;return {count:rows.length,rows};}
 function attackAmount(lines,t,spin,combo,b2b,pc){const base=spin==='full'&&t==='T'?[0,2,4,6,8][lines]||0:spin==='mini'&&t==='T'?[0,.5,1,2,3][lines]||0:spin==='mini'?0:[0,.5,1,2,4][lines]||0;
 let calc=base>0?Math.floor(base*(1+.25*Math.max(0,combo))):Math.floor(Math.log(1+1.25*Math.max(0,combo)));if(b2b>=2&&(lines===4||spin&&lines>0||pc))calc+=1;if(pc)calc+=5;return Math.max(0,calc);}
-function lock(p,now){const t=p.piece;if(!t||p.dead)return;const spin=classifySpin(p,t);let overflow=false;
+function addBlitzClearScore(p,lines,spin,type,pc,priorB2B){
+ // BLITZ: only T corner spins score spin bonuses; other immobile spins do not.
+ let base=0;
+ if(spin&&type==='T')base=(spin==='full'?[400,800,1200,1600,2600]:[100,200,400,800,1600])[lines]||0;
+ else base=[0,100,300,500,800][lines]||0;
+ const difficult=lines>0&&(lines===4||(spin&&type==='T')||pc);
+ const score=(base*(difficult&&priorB2B>0?1.5:1)+(lines>0?p.combo*50:0)+(pc?3500:0))*blitzLevel(p.lines);
+ p.blitzScore+=Math.round(score);
+}
+function lock(p,now){const t=p.piece;if(!t||p.dead)return;const spin=classifySpin(p,t);const priorB2B=p.b2b;let overflow=false;
 for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c]){const x=t.x+c,y=t.y+r;if(y<0){overflow=true;continue;}p.grid[y][x]=t.type;}
 p.pieces++;p.piece=null;const {count:lines,rows:clearedRows}=clearRows(p);p.lines+=lines;
-const pc=lines>0&&p.grid.every(row=>row.every(v=>v===null));
+const pc=lines>0&&p.grid.every(row=>row.every(v=>v===null));if(pc)p.perfectClears++;
 if(lines&&!pc)addEffect(p,'clear',now,{rows:clearedRows,power:lines});
 if(spin&&!pc)addEffect(p,'spin',now,{type:t.type,mini:spin==='mini',x:(t.x+1.5)*CELL,y:Math.min(580,Math.max(40,(t.y+1.5-(H-V))*CELL)),power:spin==='full'?2:1});
 let label='',base=0,spike=0;
 if(lines>0){p.combo++;let difficult=(lines===4||spin!==null||pc);
- if(difficult){p.b2b++;}else{if(p.surge>=4){spike=p.surge;}p.b2b=0;p.surge=0;}
+ if(difficult){p.b2b+=(mode==='blitz'&&pc?2:1);}else{if(p.surge>=4){spike=p.surge;}p.b2b=0;p.surge=0;}
  if(difficult&&p.b2b>=5)p.surge=p.b2b-1;
  const b2bCount=Math.max(0,p.b2b-1);
  base=attackAmount(lines,t.type,spin,p.combo,b2bCount,pc);
@@ -596,12 +670,14 @@ if(lines>0){p.combo++;let difficult=(lines===4||spin!==null||pc);
  p.glow=now+230;
  if(pc)impactSound('pc',Math.max(1,lines));else if(spin)impactSound('spin',Math.max(1,lines));else impactSound('clear',lines);
 }else{p.combo=-1;if(spin){label=(t.type==='T'?'T-SPIN':t.type+'-SPIN')+' ZERO';impactSound('spin',1);}}
+if(mode==='blitz')addBlitzClearScore(p,lines,spin,t.type,pc,priorB2B);
 const total=base+spike;
 if(total>0)sendAttack(p,total,now,spike,pc);
 if(label){p.event=label;p.sub=total?`공격 ${total}줄 생성${spike?' · SURGE '+spike:''}`:'줄 제거';p.eventUntil=now+1600;}
 // 줄을 없앤 배치는 가비지 추가를 막는다. 준비된 공격은 빈 배치에서 한 번에 최대 8줄까지 들어온다.
 if(lines===0)applyGarbage(p,now);
 if(overflow){p.dead=true;roundEnd(p.i);return;}
+if(mode==='sprint'&&p.lines>=SPRINT_LINES){finishChallenge('complete',now);return;}
 if(status==='running'){spawn(p);if(mode==='solo'&&!p.dead)soloCheckpoint();}
 }
 function addFeed(msg){feed.unshift(msg);feed=feed.slice(0,3);el('feed').innerHTML=feed.map(a=>`<div class="feed-item">${a}</div>`).join('');}
@@ -620,25 +696,33 @@ function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=
  }pkt.lines-=count;}
 p.incoming=p.incoming.filter(pkt=>pkt.lines>0);if(added){p.event='GARBAGE +'+added;p.sub='상대 공격이 들어왔어';p.eventUntil=now+900;p.glow=now+180;addEffect(p,'garbage',now,{power:added});impactSound('garbage');}
 }
-function roundEnd(loser){if(status!=='running'||loser!==0)return;resetInputs();if(mode==='solo'){status='soloOver';impactSound('defeat');setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
+function roundEnd(loser){if(status!=='running'||loser!==0)return;resetInputs();if(isChallenge()){finishChallenge('topout');return;}if(mode==='solo'){status='soloOver';impactSound('defeat');setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
 function updateRepeat(p,direction,now){const v=p.repeat[direction];if(!p.held[direction])return;if(now-v.at<config.das||now<p.dcdUntil)return;if(config.arr===0){while(move(p,direction==='left'?-1:1,0,now)){}v.done=true;return;}if(!v.done){move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=now;return;}if(now-v.last<config.arr)return;let count=0;while(now-v.last>=config.arr&&count++<20){const moved=move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=v.last+config.arr||now;if(!moved)break;}}
 function loop(now){requestAnimationFrame(loop);
 if(rHoldAt&&mode==='solo'&&!rHoldTriggered){const progress=Math.max(0,Math.min(1,(now-rHoldAt)/R_HOLD_MS));el('restartFill').style.width=(progress*100)+'%';if(progress>=1){rHoldTriggered=true;startSolo();impactSound('restart');el('restartFill').style.width='100%';}}
 if(status==='countdown'){
  const remain=Math.max(0,gameStartTime-now);const n=Math.max(1,Math.ceil(remain/800));setOverlay(0,String(n),'준비');setOverlay(1,String(n),'상대 준비');
 }
+if(status==='challengeCountdown'){
+ const delta=now-challengeCountdownAt;const stage=delta<300?'READY':delta<600?'SET':'GO';
+ if(el('overlay0').querySelector('.huge').textContent!==stage)setOverlay(0,stage,'');
+ if(delta>=600){status='running';roundStart=now;clockTime=0;challengeGoUntil=now+150;el('soloStatus').textContent=mode==='sprint'?'40 LINES 진행 중':'BLITZ 진행 중';}
+}
 if(status==='running'){
  const dt=Math.min(.055,(now-(loop.prev||now))/1000);clockTime=now-roundStart;
- const sec=Math.floor(clockTime/1000);el('clock').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+ if(mode==='blitz'&&clockTime>=BLITZ_DURATION_MS){finishChallenge('timeout',now);}
+ if(isChallenge()){el('clock').textContent=clockText(mode==='blitz'?Math.max(0,BLITZ_DURATION_MS-clockTime):clockTime);if(challengeGoUntil&&now>=challengeGoUntil){hideOverlay(0);challengeGoUntil=0;}}
+ else{const sec=Math.floor(clockTime/1000);el('clock').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
  const p=players[0];if(!p.dead&&p.piece){
   const left=p.held.left,right=p.held.right;
   if(left&&right){if(p.repeat.left.at>p.repeat.right.at)updateRepeat(p,'left',now);else updateRepeat(p,'right',now);}else if(left)updateRepeat(p,'left',now);else if(right)updateRepeat(p,'right',now);
-  if(p.piece){const g=1/0.8*(p.held.soft&&config.sdf!==41?config.sdf:1);p.gravity+=dt*g;let drops=0;
-   while(p.gravity>=1&&drops<40){p.gravity--;if(move(p,0,1,now))drops++;else{p.gravity=0;break;}}
+  if(p.piece&&status==='running'){const g=(mode==='blitz'?Math.min(1200,1/BLITZ_ROW_SECONDS[Math.min(14,blitzLevel(p.lines)-1)]):mode==='sprint'?1:1/0.8)*(p.held.soft&&config.sdf!==41?config.sdf:1);p.gravity+=dt*g;let drops=0;
+   while(p.gravity>=1&&drops<40){p.gravity--;if(move(p,0,1,now)){drops++;if(mode==='blitz'&&p.held.soft){p.blitzScore++;p.softDropCells++;}}else{p.gravity=0;break;}}
    if(p.piece){if(!valid(p,p.piece.m,p.piece.x,p.piece.y+1)){if(!p.groundAt)p.groundAt=now;if(now-p.groundAt>=500||p.lockResets>=15)lock(p,now);}else p.groundAt=0;}
   }
  }
  if(now-lastSnapshot>85){lastSnapshot=now;sendSnapshot();}
+ if(isChallenge())updateChallengeHud();
 }
 loop.prev=now;
 for(const p of players){renderBoard(p,now);renderHud(p,now);}
@@ -646,6 +730,7 @@ for(const p of players){renderBoard(p,now);renderHud(p,now);}
 function handleDown(e){if(e.target?.matches?.('input,textarea,[contenteditable]'))return;const code=e.code;
 if(mode==='solo'&&(e.ctrlKey||e.metaKey)&&code==='KeyZ'){e.preventDefault();if(!e.repeat)undoSolo();return;}
 if(mode==='solo'&&code==='KeyR'){e.preventDefault();if(!rHoldAt&&!e.repeat){rHoldAt=performance.now();rHoldTriggered=false;}return;}
+if(isChallenge()&&code==='KeyR'){e.preventDefault();if(!e.repeat)startChallenge();return;}
 if(!KEYMAP[0][code])return;e.preventDefault();if(e.repeat||heldKeys.has(code))return;heldKeys.add(code);if(status!=='running')return;const action=KEYMAP[0][code],p=players[0],now=performance.now();if(['left','right','soft'].includes(action)){if(action==='soft'){p.held.soft=true;act(p,'soft',now);}else{p.held[action]=true;p.repeat[action]={at:now,last:now,done:false};act(p,action,now);}}else act(p,action,now);}
 function handleUp(e){if(e.code==='KeyR'){resetRestartHold();return;}heldKeys.delete(e.code);const action=KEYMAP[0][e.code];if(action&&['left','right','soft'].includes(action))players[0].held[action]=false;}
 window.addEventListener('keydown',handleDown);window.addEventListener('keyup',handleUp);window.addEventListener('blur',()=>{resetInputs();resetRestartHold();});
@@ -754,15 +839,16 @@ renderEffects(ctx,p,now);
 function drawPreview(canvas,type){const ctx=canvas.getContext('2d');const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);if(!type)return;const m=PIECES[type],coords=[];for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++)if(m[r][c])coords.push([c,r]);const minX=Math.min(...coords.map(p=>p[0])),minY=Math.min(...coords.map(p=>p[1])),maxX=Math.max(...coords.map(p=>p[0])),maxY=Math.max(...coords.map(p=>p[1]));const size=Math.min(23,(w-12)/(maxX-minX+1),(h-10)/(maxY-minY+1));const x0=(w-size*(maxX-minX+1))/2,y0=(h-size*(maxY-minY+1))/2;for(const [c,r] of coords)tile(ctx,x0+(c-minX)*size,y0+(r-minY)*size,size,type);}
 function renderMini(p){drawPreview(holdC[p.i],p.hold);for(let j=0;j<5;j++)drawPreview(nextC[p.i][j],p.queue[j]);}
 function renderHud(p,now){const i=p.i;el('lines'+i).textContent=p.lines;el('attack'+i).textContent=p.sent;el('incoming'+i).textContent=p.incoming.reduce((a,b)=>a+b.lines,0);el('b2b'+i).textContent=Math.max(0,p.b2b-1);
-const minutes=Math.max(.001,clockTime/60000);el('pps'+i).textContent=(p.pieces/60/minutes).toFixed(2);el('apm'+i).textContent=Math.round(p.sent/minutes);el('surge'+i).textContent=p.surge>=4?'SURGE '+p.surge+' ⚡':'';
+const minutes=Math.max(.001,clockTime/60000);el('pps'+i).textContent=(p.pieces/60/minutes).toFixed(2);el('apm'+i).textContent=i===0&&isChallenge()?p.pieces:Math.round(p.sent/minutes);el('surge'+i).textContent=p.surge>=4?'SURGE '+p.surge+' ⚡':'';
 const total=p.incoming.reduce((a,b)=>a+b.lines,0);el('garbage'+i).style.height=Math.min(100,total/20*100)+'%';
+if(i===0&&isChallenge())updateChallengeHud();
 const evt=el('event'+i),active=p.eventUntil>now;
 const eventKey=active?p.event+'|'+p.sub:'';
 if(evt.dataset.display!==eventKey){evt.dataset.display=eventKey;evt.textContent=active?p.event:'';
  if(active){const s=document.createElement('span');s.className='sub';s.textContent=p.sub;evt.appendChild(s);}}
 
 }
-window.TetrisDuel={getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
+window.TetrisDuel={getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
 updateScore();queueFill(players[0]);renderMini(players[0]);renderMini(players[1]);setOverlay(0,'ONLINE','방을 만들거나 참가해');setOverlay(1,'WAITING','상대 플레이어');requestAnimationFrame(loop);
 })();
 </script></body></html>
