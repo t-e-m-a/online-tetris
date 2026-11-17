@@ -72,6 +72,161 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 .challenge-metrics .metric.points b{color:#ffe496}
 @media(max-width:800px){.challenge-metrics{gap:10px}.mode-tab{padding:6px 9px}}
 @media(max-width:540px){.actions{width:100%;justify-content:space-between}.mode-tab{padding:6px 7px;font-size:10px}.challenge-metrics{gap:8px}.challenge-metrics .metric b{font-size:12px}}
+
+/* v1.10 — Board-first responsive layout. No gameplay logic is changed. */
+.shell{width:min(100%,1480px);padding:8px clamp(8px,1.2vw,16px) 10px;gap:7px}
+.mast{min-height:38px;gap:8px}
+.player{padding:8px;border-radius:10px}
+.player-head{margin-bottom:4px}
+.match{padding:4px 12px;min-height:45px;gap:5px}
+.middle .clock{font-size:20px;line-height:23px}
+.middle .round{line-height:12px}
+.online-panel,.practice-panel{padding:7px 10px}
+.online-status{margin-top:3px}
+.arena{gap:8px}
+.event{height:27px;min-height:27px;max-height:27px;line-height:14px;margin-top:4px}
+.event .sub{line-height:12px;height:12px;max-height:12px}
+.smallstat{margin-top:4px;padding-top:5px}
+.bottom{gap:6px}
+/* All previews sit immediately alongside their boards. */
+.station{
+ --compact-board:min(345px,max(120px,calc((100dvh - 352px)/2)));
+ --compact-side:66px;--compact-gap:5px;
+ width:min(100%,calc(var(--compact-board) + 2*var(--compact-side) + 2*var(--compact-gap)));
+ grid-template-columns:var(--compact-side) minmax(0,1fr) var(--compact-side);
+ gap:var(--compact-gap);margin-inline:auto
+}
+.station .board-wrap{width:100%;min-width:0;margin:0}
+.preview{border-color:#2b3d55}
+.next-preview{margin-bottom:3px}
+/* On a desktop, a solo player gets the main stage; settings and records use a sidebar. */
+@media (min-width:940px) and (min-height:620px){
+ body.solo-mode .shell{
+  display:grid;grid-template-columns:minmax(0,1fr) 240px;
+  grid-template-rows:auto auto auto minmax(0,1fr);
+  align-items:start;align-content:start;column-gap:12px;row-gap:9px;
+  min-height:100dvh;
+ }
+ .solo-mode .mast{grid-column:1/-1;grid-row:1}
+ .solo-mode .practice-panel{grid-column:2;grid-row:2;padding:12px}
+ .solo-mode .practice-grid{gap:7px}
+ .solo-mode .practice-grid .btn{flex:1 1 auto}
+ .solo-mode .practice-status{flex-basis:100%;line-height:15px}
+ .solo-mode .challenge-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px 5px;margin-top:11px;padding-top:10px}
+ .solo-mode .challenge-metrics .metric{display:flex;flex-direction:column;gap:2px;align-items:start}
+ .solo-mode .challenge-metrics .metric b{font-size:21px;line-height:1.1}
+ .solo-mode .challenge-metrics .metric span{font-size:10px}
+ .solo-mode .match{grid-column:2;grid-row:3;padding:12px;min-height:72px}
+ .solo-mode .match .middle .clock{font-size:29px;line-height:34px}
+ .solo-mode .match .middle .mode{font-size:10px}
+ .solo-mode .arena{
+  grid-column:1;grid-row:2/5;
+  display:grid;grid-template-columns:minmax(0,1fr);
+  width:100%;align-self:start;justify-content:center;
+ }
+ .solo-mode .arena .player{width:min(100%,725px);margin-inline:auto;padding:12px 14px}
+ .solo-mode .player-head{padding:0 3px;margin-bottom:8px}
+ .solo-mode .player-head .name{font-size:14px}
+ .solo-mode .station,.solo-mode.challenge-mode .station{
+  --compact-board:min(420px,max(150px,calc((100dvh - 180px)/2)));
+  --compact-side:84px;--compact-gap:8px;
+  width:min(100%,calc(var(--compact-board) + 2*var(--compact-side) + 2*var(--compact-gap)));
+  grid-template-columns:var(--compact-side) minmax(0,1fr) var(--compact-side);
+ }
+ .solo-mode .station .board-wrap{width:100%}
+ .solo-mode .sidetitle{font-size:10px}
+ .solo-mode .event{height:28px;min-height:28px;max-height:28px}
+ .solo-mode .arena .player{position:relative}
+ /* Four game statistics occupy the unused left rail, not space below the board. */
+ .solo-mode .player.one .smallstat{
+  position:absolute;left:16px;top:116px;width:77px;
+  display:grid;grid-template-columns:1fr;gap:13px;
+  border:0;padding:0;margin:0;
+ }
+ .solo-mode .smallstat div{text-align:left;border-left:2px solid #344a64;padding-left:8px}
+ .solo-mode .smallstat b{font-size:19px;line-height:1.15}
+ .solo-mode .smallstat span{font-size:9px}
+ .solo-mode .bottom{grid-column:2;grid-row:4;display:flex;flex-direction:column;align-items:stretch;gap:7px;overflow:visible}
+ .solo-mode .bottom>details{width:100%;min-width:0}
+ .solo-mode .bottom summary{padding:10px 12px;font-size:12px}
+ .solo-mode .settings-controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .solo-mode .soundpack-grid{grid-template-columns:1fr}
+ .solo-mode .soundpack[open]{max-width:none}
+ .solo-mode .setting-bottom{flex-wrap:wrap}
+}
+/* Tablet portrait, compact windows and phones: vertically stack the controls. */
+@media (max-width:939px), (max-height:619px){
+ .solo-mode .shell{display:flex;height:auto;min-height:0}
+ .solo-mode .arena{display:grid;grid-template-columns:minmax(0,1fr);width:100%;justify-content:center}
+ .solo-mode .arena .player{width:min(100%,710px);margin:auto;padding:10px 12px}
+ .solo-mode .station,.solo-mode.challenge-mode .station{
+  --compact-board:min(420px,max(125px,calc((100dvh - 315px)/2)));
+  --compact-side:74px;--compact-gap:6px;
+  width:min(100%,calc(var(--compact-board) + 2*var(--compact-side) + 2*var(--compact-gap)));
+  grid-template-columns:var(--compact-side) minmax(0,1fr) var(--compact-side)
+ }
+ .solo-mode .bottom{display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+ .solo-mode .bottom>details{flex:0 0 auto}
+ .challenge-metrics{flex-wrap:nowrap;overflow-x:auto;gap:11px;padding-bottom:1px}
+}
+@media(max-width:800px){
+ .arena{gap:4px}
+ .station{--compact-board:min(275px,max(110px,calc((100dvh - 335px)/2)));--compact-side:46px;--compact-gap:3px}
+ .solo-mode .station,.solo-mode.challenge-mode .station{--compact-side:70px;--compact-gap:6px}
+ .online-panel,.practice-panel{padding:6px 8px}
+}
+@media(max-width:520px){
+ .shell{gap:5px;padding:6px}
+ .match{min-height:43px;padding:3px 7px}
+ .middle .clock{font-size:19px;line-height:22px}
+ .event{height:24px;min-height:24px;max-height:24px;margin-top:3px}
+ .smallstat{padding-top:3px;margin-top:3px}
+ .station{--compact-board:min(210px,max(90px,calc((100dvh - 345px)/2)));--compact-side:30px;--compact-gap:2px}
+ .solo-mode .arena .player{padding:7px}
+ .solo-mode .station,.solo-mode.challenge-mode .station{
+  --compact-board:min(335px,max(130px,calc((100dvh - 335px)/2)));
+  --compact-side:47px;--compact-gap:4px;
+ }
+ .solo-mode .smallstat b{font-size:14px}
+ .solo-mode .event{height:24px;min-height:24px;max-height:24px}
+ .solo-mode .bottom{gap:5px}
+ .solo-mode .bottom summary{padding:8px 10px}
+ .challenge-metrics .metric b{font-size:13px}
+ .practice-grid{gap:5px}
+}
+/* Keep all textual effects in a fixed-height HUD; there is no board shake/resize. */
+.event{contain:layout;transition:none;overflow:hidden}
+
+
+/* Challenge HUD shares one horizontal toolbar on tablet-sized viewports. */
+@media (min-width:521px) and (max-width:939px) and (min-height:620px){
+ .solo-mode.challenge-mode .practice-panel{display:flex;align-items:center;justify-content:space-between;gap:10px}
+ .solo-mode.challenge-mode .practice-grid{flex:0 1 auto;min-width:0}
+ .solo-mode.challenge-mode .challenge-metrics{display:flex;flex:1 1 auto;min-width:0;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:nowrap;overflow-x:auto;margin:0;padding:0;border:0}
+ .solo-mode.challenge-mode .challenge-metrics .metric{flex:0 0 auto}
+ .solo-mode.challenge-mode .station{--compact-board:min(420px,max(125px,calc((100dvh - 333px)/2)))}
+}
+@media (max-width:520px){
+ .solo-mode.challenge-mode .station{--compact-board:min(335px,max(120px,calc((100dvh - 365px)/2)))}
+}
+
+/* Wide 1v1: put the persistent four-stat HUD in the spare left rail. */
+@media(min-width:1200px) and (min-height:620px){
+ body:not(.solo-mode) .station{--compact-board:min(340px,max(120px,calc((100dvh - 310px)/2)))}
+ body:not(.solo-mode) .player{position:relative}
+ body:not(.solo-mode) .player .smallstat{
+  position:absolute;top:112px;left:15px;width:78px;
+  display:grid;grid-template-columns:1fr;gap:12px;
+  padding:0;margin:0;border:0;
+ }
+ body:not(.solo-mode) .player .smallstat div{text-align:left;border-left:2px solid #334b69;padding-left:8px}
+ body:not(.solo-mode) .player .smallstat b{font-size:16px;line-height:1.15}
+ body:not(.solo-mode) .player .smallstat span{font-size:9px}
+}
+/* Short portrait screens: do not clip the collapsed bottom controls. */
+@media(min-width:521px) and (max-width:939px){
+ .solo-mode:not(.challenge-mode) .station{--compact-board:min(420px,max(125px,calc((100dvh - 329px)/2)))}
+}
 </style>
 </head>
 <body>
