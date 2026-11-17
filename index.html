@@ -696,6 +696,15 @@ async function createRoom(){reconnectAttempts=0;try{workerBase=getBase();statusL
 async function joinRoom(){reconnectAttempts=0;try{workerBase=getBase();room=el('roomInput').value.trim().toUpperCase();if(!/^[0-9]{4}$/.test(room))throw Error('올바른 4자리 숫자 방 코드를 입력해 줘.');statusLine('방 확인 중…');const res=await fetch(workerBase+'/api/check/'+room);const data=await res.json();if(!res.ok)throw Error(data.error||'방 확인 실패');persistentStore.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('참가 실패: '+e.message);}}
 function connectRoom(retrying=false){if(ws){try{ws.close(1000,'Changing room');}catch{}}if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}connected=false;readySent=false;presence=[false,false];status='lobby';resetInputs();const endpoint=workerBase.replace(/^http/,'ws')+'/api/ws/'+room+'?token='+encodeURIComponent(sessionToken);const socket=new WebSocket(endpoint);ws=socket;statusLine('서버 연결 중…');updateRoom();socket.addEventListener('open',()=>{if(ws!==socket)return;connected=true;reconnectAttempts=0;lastWireSent=Date.now();statusLine('접속 성공 · 상대를 기다리는 중');updateRoom();});socket.addEventListener('message',e=>{if(ws!==socket)return;if(e.data==='pong')return;let msg;try{msg=JSON.parse(e.data);}catch{return;}onNetwork(msg);});socket.addEventListener('close',e=>{if(ws!==socket)return;connected=false;presence=[false,false];readySent=false;status='lobby';resetInputs();statusLine('연결 종료 ('+e.code+')');if(mode==='online'&&room&&reconnectAttempts<3){reconnectAttempts++;const attempt=reconnectAttempts;statusLine('연결 끊김 · 자동 재접속 '+attempt+'/3');reconnectTimer=setTimeout(()=>{if(!connected&&mode==='online'&&room)connectRoom(true);},1200*attempt);}setOverlay(0,'OFFLINE','서버와 연결이 종료됐어');setOverlay(1,'OFFLINE','상대 연결 끊김');updateRoom();});socket.addEventListener('error',()=>{if(ws===socket)statusLine('연결 오류 · Workers 서버 주소를 확인해 줘.');});}
 function startRound(msg){lastStateSignature='';lastGridDigest='';lastSnapshot=0;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;status='countdown';readySent=false;clockTime=0;feed=[];el('feed').innerHTML='';players=[newPlayer(0),newPlayer(1)];if(Array.isArray(msg.seeds)){players[0].rng=(msg.seeds[seat]>>>0)||players[0].rng;players[1].rng=(msg.seeds[1-seat]>>>0)||players[1].rng;}resetInputs();queueFill(players[1]);spawn(players[0]);setOverlay(0,'3','준비');setOverlay(1,'3','상대 준비');gameStartTime=performance.now()+2300;countdownAt=performance.now();el('roundText').textContent='ROUND '+round+' · COUNTDOWN';updateScore();updateRoom();}
+// Remote-only render smoothing. No extra WebSocket messages and no changes to
+// game state or collision calculations; short tweens merely blend received tiles.
+function remoteDisplayPos(p,now){
+ const m=p.netTween;if(!m||!p.piece)return p.piece?{x:p.piece.x,y:p.piece.y}:null;
+ const a=Math.min(1,Math.max(0,(now-m.at)/m.duration));
+ if(a>=1){p.netTween=null;return {x:m.toX,y:m.toY};}
+ const k=1-(1-a)*(1-a);
+ return {x:m.fromX+(m.toX-m.fromX)*k,y:m.fromY+(m.toY-m.fromY)*k};
+}
 function onNetwork(msg){
  if(msg.type==='welcome'){seat=msg.seat;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;updateScore();statusLine('플레이어 '+(seat+1)+' 참가 완료 · 상대를 기다리는 중');}
  if(msg.type==='presence'){if(seat<0)return;presence=msg.players;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];updateScore();if(msg.phase==='lobby'){status='lobby';setOverlay(0,'WAITING','두 사람이 준비하면 시작');setOverlay(1,'WAITING',playersConnected()?'상대 준비 대기':'상대 입장 대기');statusLine(playersConnected()?'상대 접속 완료 · 준비 완료 버튼을 눌러 줘.':'방에 접속했어 · 초대 링크를 공유해 줘.');}else if(msg.phase==='over'&&status!=='over'){status='over';}else if(msg.phase==='countdown'&&status==='lobby'){statusLine('곧 시작해.');}else if(msg.phase==='running'&&status==='lobby'){statusLine('진행 중인 경기야. 다시 시작하려면 상대와 재접속해 줘.');}updateRoom();}
@@ -703,6 +712,8 @@ function onNetwork(msg){
  if(msg.type==='go'&&status==='countdown'){startPlaying(performance.now());}
  if(msg.type==='state'&&['running','countdown'].includes(status)){
   const d=msg.state,p=players[1];if(!d||!Array.isArray(d.p)&&d.p!==null)return;
+  const visualNow=performance.now(), priorPiece=p.piece, priorCount=p.pieces;
+  const previousVisual=remoteDisplayPos(p,visualNow);
   // Only visible 20 rows are sent (200 cells rather than the full 40x10 board).
   if(typeof d.g==='string'&&d.g.length===V*W&&/^[.IJLOSTZG]+$/.test(d.g)){
    p.grid=Array.from({length:H},(_,y)=>y<H-V?Array(W).fill(null):[...d.g.slice((y-H+V)*W,(y-H+V+1)*W)].map(ch=>ch==='.'?null:ch));
@@ -711,6 +722,15 @@ function onNetwork(msg){
   else p.piece=null;
   const changedPreview=p.hold!==(d.h||null)||p.queue.slice(0,7).join('')!==d.q;
   p.hold=d.h||null;p.queue=[...d.q];p.lines=d.l||0;p.pieces=d.n||0;p.sent=d.s||0;p.b2b=d.b||0;p.surge=d.u||0;p.incoming=[{lines:d.i||0}];
+  // Never animate between two different pieces, rotations or teleports.
+  const samePiece=priorPiece&&p.piece&&priorCount===p.pieces&&
+   priorPiece.type===p.piece.type&&priorPiece.rot===p.piece.rot;
+  const dx=previousVisual&&p.piece?p.piece.x-previousVisual.x:0;
+  const dy=previousVisual&&p.piece?p.piece.y-previousVisual.y:0;
+  p.netTween=samePiece&&(Math.abs(dx)+Math.abs(dy)>0.001)&&
+   Math.abs(dx)<=3&&Math.abs(dy)<=2
+    ?{fromX:previousVisual.x,fromY:previousVisual.y,toX:p.piece.x,toY:p.piece.y,at:visualNow,duration:95}
+    :null;
   const nextEvent=d.e||'';if(nextEvent!==p.event){const ts=performance.now();p.eventUntil=nextEvent?ts+1600:0;if(nextEvent){if(nextEvent.includes('PERFECT CLEAR'))addEffect(p,'pc',ts,{power:3});else if(nextEvent.includes('SPIN'))addEffect(p,'spin',ts,{x:150,y:320,type:'T',power:2});else if(/QUAD|TRIPLE|DOUBLE|SINGLE/.test(nextEvent))addEffect(p,'clear',ts,{rows:[35,36],power:1});}}
   p.event=nextEvent;p.sub=d.d||'';p.dead=!!d.x;
   if(changedPreview)renderMini(p);
@@ -969,8 +989,11 @@ p.incoming=p.incoming.filter(pkt=>pkt.lines>0);if(added){p.event='GARBAGE +'+add
 }
 function roundEnd(loser){if(status!=='running'||loser!==0)return;resetInputs();if(isChallenge()){finishChallenge('topout');return;}if(mode==='solo'){status='soloOver';impactSound('defeat');setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
 function updateRepeat(p,direction,now){const v=p.repeat[direction];if(!p.held[direction])return;if(now-v.at<config.das||now<p.dcdUntil)return;if(config.arr===0){while(move(p,direction==='left'?-1:1,0,now)){}v.done=true;return;}if(!v.done){move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=now;return;}if(now-v.last<config.arr)return;let count=0;while(now-v.last>=config.arr&&count++<20){const moved=move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=v.last+config.arr||now;if(!moved)break;}}
-// Physics runs at a fixed 120Hz. Rendering stays tied to the display's refresh rate.
-const PHYS_STEP=1000/120;let physPrev=0,physTime=0,physDebt=0;
+// Fixed-step physics. Tick timestamps are derived from the CURRENT frame clock,
+// never from a separately accumulated clock that can drift behind performance.now().
+// Discard a long suspension rather than trying to catch up hundreds of old ticks.
+const PHYS_STEP=1000/120, MAX_PHYS_GAP=120;
+let physPrev=0,physDebt=0;
 function stepPhysics(now,dt){
  const p=players[0];if(!p.dead&&p.piece){
   const left=p.held.left,right=p.held.right;
@@ -997,13 +1020,18 @@ if(status==='running'){
  if(mode==='blitz'&&clockTime>=BLITZ_DURATION_MS){finishChallenge('timeout',now);}
  if(isChallenge()){el('clock').textContent=clockText(mode==='blitz'?Math.max(0,BLITZ_DURATION_MS-clockTime):clockTime);if(challengeGoUntil&&now>=challengeGoUntil){hideOverlay(0);challengeGoUntil=0;}}
  else{const sec=Math.floor(clockTime/1000);el('clock').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
- if(!physPrev){physPrev=now;physTime=now;physDebt=0;}
- const elapsed=Math.min(250,Math.max(0,now-physPrev));physPrev=now;physDebt+=elapsed;
+ if(!physPrev){physPrev=now;physDebt=0;}
+ const elapsed=now-physPrev;physPrev=now;
+ if(elapsed>=0&&elapsed<=MAX_PHYS_GAP){physDebt+=elapsed;}
+ else{physDebt=0;} // Tab switch, browser throttling or a long frame stall.
  let stepsTaken=0;
- while(physDebt>=PHYS_STEP&&stepsTaken++<32&&status==='running'){
-  physTime+=PHYS_STEP;stepPhysics(physTime,PHYS_STEP/1000);physDebt-=PHYS_STEP;
+ while(physDebt>=PHYS_STEP&&stepsTaken<15&&status==='running'){
+  // Tie DAS/ARR, DCD, gravity and lock timers to the same wall clock as key events.
+  const tickNow=now-physDebt+PHYS_STEP;
+  stepPhysics(tickNow,PHYS_STEP/1000);
+  physDebt=Math.max(0,physDebt-PHYS_STEP);stepsTaken++;
  }
- if(physDebt>=PHYS_STEP*32)physDebt=0;
+ if(stepsTaken>=15)physDebt=0;
  if(now-lastSnapshot>=150){lastSnapshot=now;sendSnapshot();}
  if(isChallenge())updateChallengeHud();
 }
@@ -1116,7 +1144,9 @@ ctx.strokeStyle='#18243a';ctx.lineWidth=.65;for(let x=1;x<W;x++){ctx.beginPath()
 for(let r=H-V;r<H;r++)for(let c=0;c<W;c++)if(p.grid[r][c])tile(ctx,c*CELL,(r-(H-V))*CELL,CELL,p.grid[r][c]);
 if(p.piece){const t=p.piece;let gy=t.y;while(valid(p,t.m,t.x,gy+1))gy++;for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c]){
 const px=(t.x+c)*CELL,py=(gy+r-(H-V))*CELL;if(py>=0&&py<600)tile(ctx,px,py,CELL,t.type,.75,true);}
-for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c]){const px=(t.x+c)*CELL,py=(t.y+r-(H-V))*CELL;if(py>=0&&py<600)tile(ctx,px,py,CELL,t.type);}}
+// Local block coordinates stay exact; only the opponent's canvas position is tweened.
+const display=p.i===1?remoteDisplayPos(p,now):{x:t.x,y:t.y};
+for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c]){const px=(display.x+c)*CELL,py=(display.y+r-(H-V))*CELL;if(py>=0&&py<600)tile(ctx,px,py,CELL,t.type);}}
 if(now<p.glow){ctx.fillStyle=p.i===0?'#5ce8ff19':'#ff6da51a';ctx.fillRect(0,0,300,600);}
 renderEffects(ctx,p,now);
 }
@@ -1132,7 +1162,7 @@ if(evt.dataset.display!==eventKey){evt.dataset.display=eventKey;evt.classList.to
  if(active){const s=document.createElement('span');s.className='sub';s.textContent=p.sub;evt.appendChild(s);}}
 
 }
-window.TetrisDuel={version:'2.0-lite',getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
+window.TetrisDuel={version:'2.0.1-lite',getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
 updateScore();queueFill(players[0]);renderMini(players[0]);renderMini(players[1]);setOverlay(0,'ONLINE','방을 만들거나 참가해');setOverlay(1,'WAITING','상대 플레이어');requestAnimationFrame(loop);
 })();
 </script></body></html>
