@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090c14">
-<title>TetrisDuel v2.4 — Online Tetris</title>
+<title>TetrisDuel v2.5 — Online Tetris</title>
 <style>
 :root{color-scheme:dark;--bg:#080c15;--surface:#11192a;--text:#edf3ff;--muted:#8091aa;--border:#253248;--cyan:#68d7ff;--pink:#f294cd}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Pretendard,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
@@ -69,7 +69,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 .challenge-metrics .metric b{font-size:14px;color:#e6f4ff}
 .challenge-metrics .metric span{font-size:10px;color:#8a9eb6;font-weight:750}
 .challenge-metrics .metric.goal b{color:#80e7ff}
-.challenge-metrics .metric.points b{color:#ffe496}
+.challenge-metrics .metric.score-stat b{color:#ffe496}
 @media(max-width:800px){.challenge-metrics{gap:10px}.mode-tab{padding:6px 9px}}
 @media(max-width:540px){.actions{width:100%;justify-content:space-between}.mode-tab{padding:6px 7px;font-size:10px}.challenge-metrics{gap:8px}.challenge-metrics .metric b{font-size:12px}}
 
@@ -563,6 +563,39 @@ body[data-theme]:not([data-theme=midnight]) .profile-best{color:var(--text)}
  body.touch-mode.solo-mode.challenge-mode .player.one .smallstat{padding-top:2px;margin-top:1px}
  body.touch-mode.solo-mode.challenge-mode .player.one .event{height:17px;min-height:17px;max-height:17px}
 }
+/* v2.5 — coherent color system. The 7 tetromino hues never change. */
+body[data-theme=noir]{--bg:#0b1018;--surface:#151e2c;--text:#e6edf8;--muted:#9baabd;--border:#29394a;--cyan:#8dc7e8;--pink:#b9add8;
+ --ui-soft:#192536;--ui-control:#1c2b3d;--ui-input:#0e1724;--ui-hover:#294057;--ui-border:#374d63;
+ background:radial-gradient(ellipse at 48% -28%,#1d2c41 0%,transparent 54%),#0b1018}
+body[data-theme=midnight]{--ui-soft:#142239;--ui-control:#20324d;--ui-input:#0c1728;--ui-hover:#2c4768;--ui-border:#3c5877}
+body[data-theme=aurora]{--ui-soft:#12312f;--ui-control:#1b4440;--ui-input:#0a2423;--ui-hover:#265b55;--ui-border:#3c716b}
+body[data-theme=sakura]{--ui-soft:#2e2037;--ui-control:#422d4b;--ui-input:#211627;--ui-hover:#5b3c64;--ui-border:#724e79}
+body[data-theme=amber]{--ui-soft:#32271e;--ui-control:#473628;--ui-input:#231a13;--ui-hover:#604831;--ui-border:#795c41}
+body[data-theme=mono]{--ui-soft:#242a32;--ui-control:#313945;--ui-input:#171d25;--ui-hover:#444f5c;--ui-border:#5c6876}
+body[data-theme] .player,body[data-theme] .match,body[data-theme] .online-panel,body[data-theme] .practice-panel,
+body[data-theme] :is(.help,.options,.recordspanel,.controlbind,.soundpack){background:var(--surface);border-color:var(--border)}
+body[data-theme] .mode-tabs{background:var(--ui-soft);border-color:var(--ui-border)}
+body[data-theme] .mode-tab{color:var(--muted)}
+body[data-theme] :is(.mode-tab.selected,.btn.primary){background:var(--cyan);color:#09121e;border-color:var(--cyan)}
+body[data-theme] .btn:not(.primary),body[data-theme] .bind-key,body[data-theme] .touch-tools button{background:var(--ui-control);border-color:var(--ui-border);color:var(--text)}
+body[data-theme] .btn:not(.primary):hover,body[data-theme] .mode-tab:not(.selected):hover{background:var(--ui-hover)}
+body[data-theme] :is(.profile-nickname input,.field input,.record-controls input,#themeSelect,.setting select,#analysisMetric,.replay-controls select){background:var(--ui-input);border-color:var(--ui-border);color:var(--text)}
+body[data-theme] .profilebar .recordspanel .details-body,body[data-theme] .replay-window,
+body[data-theme] .library-window,body[data-theme] .analysis-window,body[data-theme] .touch-tool-panel{
+ background:var(--surface);border-color:var(--ui-border);color:var(--text)}
+body[data-theme] :is(.replay-overlay,.library-overlay,.analysis-overlay){background:color-mix(in srgb,var(--bg) 91%,transparent)}
+body[data-theme] :is(.library-row,.analysis-metric,.touch-order-row){background:var(--ui-soft);border-color:var(--ui-border)}
+body[data-theme] .touch-controls{background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 94%,transparent),var(--bg));border-color:var(--ui-border)}
+body[data-theme] .touch-btn{background:linear-gradient(145deg,var(--ui-control),var(--ui-soft));border-color:var(--ui-border)}
+body[data-theme] .touch-btn:active,body[data-theme] .touch-btn.is-held{background:var(--ui-hover)}
+body[data-theme] .board-wrap{background:#080d15;border-color:var(--ui-border)}
+body[data-theme] .replay-window #replayCanvas{border-color:var(--ui-border)}
+body[data-theme] :is(.sidetitle,.smallstat span,.challenge-metrics .metric span,.record-note,.setting-explain,.replay-top span){color:var(--muted)}
+body[data-theme] .setting input[type=range],body[data-theme] #replaySeek{accent-color:var(--cyan)}
+/* Avoid .points (match win markers) affecting the challenge's SCORE metric. */
+body.solo-mode.challenge-mode .challenge-metrics .metric.score-stat{margin:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;justify-content:flex-start;width:100%;min-width:0}
+body.solo-mode.challenge-mode .challenge-metrics .metric.score-stat b{margin:0;max-width:100%;font-variant-numeric:tabular-nums;letter-spacing:-.045em}
+@media(max-width:520px){body.solo-mode.challenge-mode .challenge-metrics .metric.score-stat b{font-size:clamp(11px,3.4vw,16px)}}
 </style>
 </head>
 <body>
@@ -576,9 +609,7 @@ body[data-theme]:not([data-theme=midnight]) .profile-best{color:var(--text)}
     <span class="profile-best" id="quickBest" title="이 브라우저의 개인 최고 기록">40L — · BLITZ —</span>
     <details class="recordspanel" id="recordsPanel"><summary>최고 기록</summary><div class="details-body">
       <div class="record-controls"><label class="field"><input id="shareRecords" type="checkbox"> 온라인 기록 제출</label><button id="refreshRanks" class="btn" type="button">온라인 기록 조회</button></div>
-      <label class="field" style="margin-top:8px">리플레이 기록 서버 <input id="recordServerUrl" type="url" placeholder="https://...workers.dev" aria-label="기록 서버 주소" style="width:100%;max-width:100%;letter-spacing:0" /></label>
-      <p class="record-note">v2.4 온라인 기록은 새로 시작해. 기록 서버를 별도 배포해야 하며 등록 시 리플레이가 함께 저장돼. 비공식·비검증 순위야.</p>
-      <div id="localRecords" class="record-note"></div><div id="recordNotice"></div><table class="records-table"><thead><tr><th>#</th><th>이름</th><th>기록</th><th>PC</th><th>리플레이</th></tr></thead><tbody id="rankingRows"><tr><td colspan="5">기록 서버를 설정한 뒤 조회할 수 있어.</td></tr></tbody></table>
+      <div id="localRecords" class="record-note"></div><div id="recordNotice"></div><table class="records-table"><thead><tr><th>#</th><th>이름</th><th>기록</th><th>PC</th><th>리플레이</th></tr></thead><tbody id="rankingRows"><tr><td colspan="5">온라인 기록을 조회할 수 있어.</td></tr></tbody></table>
     </div></details>
     <button class="btn replay-open" id="replayOpen" type="button" title="마지막 플레이를 재생" disabled>리플레이</button><button id="openLibrary" type="button" class="btn" title="리플레이 목록">보관함</button><button id="openAnalysis" type="button" class="btn" title="최근 게임 분석">분석</button>
   </div>
@@ -630,7 +661,7 @@ body[data-theme]:not([data-theme=midnight]) .profile-best{color:var(--text)}
  </div></details>
  <details class="options" id="config"><summary>감도 설정</summary><div class="details-body"><div class="settings-controls">
    <label class="setting">화면 테마
-     <select id="themeSelect" aria-label="화면 테마 선택"><option value="midnight">Midnight · 기본</option><option value="aurora">Aurora · 청록</option><option value="sakura">Sakura · 분홍</option><option value="amber">Ember · 주황</option><option value="mono">Mono · 무채색</option></select>
+     <select id="themeSelect" aria-label="화면 테마 선택"><option value="noir">Noir · 기본 다크</option><option value="midnight">Midnight · 블루</option><option value="aurora">Aurora · 청록</option><option value="sakura">Sakura · 분홍</option><option value="amber">Ember · 주황</option><option value="mono">Mono · 무채색</option></select>
      <span class="setting-explain">선택 즉시 적용 · 기기별 저장</span>
    </label>
    <label class="setting">DAS <strong id="dasVal">6.5F</strong><input id="das" type="range" min="0" max="20" step="0.5" value="6.5"><span class="setting-explain">좌우 반복 시작 지연</span></label>
@@ -712,25 +743,31 @@ body[data-theme]:not([data-theme=midnight]) .profile-best{color:var(--text)}
 const W=10,H=40,V=20,CELL=30,TYPES=['I','J','L','O','S','T','Z'];
 // TETR.IO-style default piece hues: mint/cyan, indigo, orange, gold, lime, pink-purple, red.
 const COLORS={I:'#2fcab8',J:'#5657d9',L:'#e99c4f',O:'#ead354',S:'#98cf43',T:'#cc55c7',Z:'#ed5960',G:'#626879'};
-const THEME_KEY='tetrisduel_theme_v24';
+// Keep tetromino colors immutable across every UI theme.
+const THEME_KEY='tetrisduel_theme_v25';
 const THEME_DATA={
- midnight:{colors:{},board:'#0a1121',grid:'#18243a'},
- aurora:{colors:{I:'#36ecd2',J:'#6487e5',L:'#fbab71',O:'#f5df7c',S:'#8ee597',T:'#db8af8',Z:'#fa818f',G:'#657f86'},board:'#06191c',grid:'#1c4548'},
- sakura:{colors:{I:'#7cddf0',J:'#8c8bf7',L:'#f1a079',O:'#f8de8b',S:'#afde8b',T:'#ee93dd',Z:'#f17f9c',G:'#827386'},board:'#170e22',grid:'#38243e'},
- amber:{colors:{I:'#70cfc0',J:'#9c9ff6',L:'#e9975b',O:'#f2d37b',S:'#bbd36a',T:'#c49be5',Z:'#ed866d',G:'#777269'},board:'#19130d',grid:'#423323'},
- mono:{colors:{I:'#d2e9f0',J:'#9ba4b8',L:'#e4e7ed',O:'#f4f5f9',S:'#a6bdce',T:'#bfc4db',Z:'#8796b4',G:'#4f586a'},board:'#10141b',grid:'#2c3640'}
+ noir:{board:'#080d15',grid:'#1b2736'},
+ midnight:{board:'#0a1121',grid:'#18243a'},
+ aurora:{board:'#06191c',grid:'#1c4548'},
+ sakura:{board:'#170e22',grid:'#38243e'},
+ amber:{board:'#19130d',grid:'#423323'},
+ mono:{board:'#10141b',grid:'#2c3640'}
 };
-const THEME_BASE_COLORS={...COLORS};let selectedTheme='midnight';
+let selectedTheme='noir';
 function applyTheme(next){
- const theme=THEME_DATA[next]||THEME_DATA.midnight;selectedTheme=THEME_DATA[next]?next:'midnight';
- Object.assign(COLORS,THEME_BASE_COLORS,theme.colors);
+ selectedTheme=Object.hasOwn(THEME_DATA,next)?next:'noir';
  document.body.dataset.theme=selectedTheme;
  document.getElementById('themeSelect').value=selectedTheme;
+ document.querySelector('meta[name="theme-color"]').content=getComputedStyle(document.body).getPropertyValue('--bg').trim()||'#0b1018';
  try{localStorage.setItem(THEME_KEY,selectedTheme);}catch{}
 }
-try{selectedTheme=localStorage.getItem(THEME_KEY)||'midnight';}catch{}
+try{
+ // Preserve intentional older theme choices; replace the old default Midnight with Noir.
+ const old=localStorage.getItem('tetrisduel_theme_v24');
+ selectedTheme=localStorage.getItem(THEME_KEY)||(old&&old!=='midnight'?old:'noir');
+}catch{}
 applyTheme(selectedTheme);
-document.getElementById('themeSelect').addEventListener('change',e=>{applyTheme(e.target.value);});
+document.getElementById('themeSelect').addEventListener('change',e=>applyTheme(e.target.value));
 const PIECES={
  I:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
  J:[[1,0,0],[1,1,1],[0,0,0]],L:[[0,0,1],[1,1,1],[0,0,0]],
@@ -951,15 +988,18 @@ function impactSound(kind,power=1){
  if(playPersonalSample(sampleKey))return;
  if(kind==='matchwin'&&playPersonalSample('victory'))return;
   if(kind==='countReady'){
-   // Original short digital countdown cues; no copyrighted game recordings.
-   tone(548,.067,'square',.061,570);tone(1096,.035,'sine',.042,1150,.011);
+   // Warm two-note countdown: rounded attack, no harsh square-wave beeps.
+   tone(392,.110,'sine',.074,411);
+   tone(588,.080,'triangle',.019,606,.025);
   }else if(kind==='countSet'){
-   tone(692,.070,'square',.072,718);tone(1384,.043,'sine',.041,1425,.013);
+   tone(440,.115,'sine',.079,466);
+   tone(660,.090,'triangle',.020,675,.025);
   }else if(kind==='countGo'){
-   tone(784,.110,'triangle',.135,870);
-   tone(988,.155,'triangle',.095,1100,.022);
-   tone(1175,.195,'sine',.100,1230,.042);
-   bass(196,110,.005,.13,.085);
+   // Soft, upbeat rising resolution without reusing external game audio.
+   tone(523.25,.180,'triangle',.085,523.25);
+   tone(659.26,.175,'sine',.070,659.26,.027);
+   tone(783.99,.240,'sine',.090,783.99,.054);
+   tone(261.63,.130,'sine',.039,261.63,.006);
   }else if(kind==='rotate'){
   const t=performance.now();if(t-lastRotateSound<19)return;lastRotateSound=t;
   zap(630,390,.028,.052,0,1800);swish(.024,.028,2200,3100);
@@ -1052,10 +1092,10 @@ function showLocalRecords(){const x=savedRecords();const f=n=>n==null?'—':n;
 const cleanNickname=x=>(String(x||'PLAYER').normalize('NFKC').replace(/[^A-Za-z0-9가-힣_\-]/g,'').slice(0,16)||'PLAYER');
 el('recordNickname').value=cleanNickname(persistentStore.getItem(NAME_KEY)||'PLAYER');
 el('recordNickname').addEventListener('change',()=>{el('recordNickname').value=cleanNickname(el('recordNickname').value);persistentStore.setItem(NAME_KEY,el('recordNickname').value);});
-const RECORDS_URL_KEY='tetrisduel_records_worker_v24';
-el('recordServerUrl').value=persistentStore.getItem(RECORDS_URL_KEY)||'';
-el('recordServerUrl').addEventListener('change',()=>{try{const v=el('recordServerUrl').value.trim();if(v){const u=new URL(v);if(u.protocol!=='https:'&&!(['http:'].includes(u.protocol)&&['localhost','127.0.0.1'].includes(u.hostname)))throw Error();}persistentStore.setItem(RECORDS_URL_KEY,v);}catch{el('recordNotice').textContent='기록 서버 주소를 확인해 줘.';}});
-function recordBase(){const x=el('recordServerUrl').value.trim().replace(/\/$/,'');if(!x)throw Error('최고 기록에서 새 기록 서버 주소를 먼저 설정해 줘.');return x;}
+// Default Cloudflare Workers URL; not exposed to players. Deploy records-worker
+// under this name in the same Cloudflare account as the existing PvP Worker.
+const RECORDS_ENDPOINT='https://tetrisduel-records.tema-tetris.workers.dev';
+function recordBase(){return RECORDS_ENDPOINT;}
 // Keep a small and playable replay with every opt-in record. Grid snapshots are
 // dictionary-indexed; only visible changes and timed samples need transferring.
 function compactOnlineReplay(src){
@@ -1093,7 +1133,7 @@ function keepRecord(result){if(!isChallenge())return;const p=players[0];const it
    const replay=compactOnlineReplay(replayLast);
    if(!replay){el('recordNotice').textContent='온라인 등록 건너뜀: 리플레이 용량 또는 형식 오류';return;}
    fetch(recordBase()+'/api/records/finish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ticket,mode,name:cleanNickname(el('recordNickname').value),...item,replay})})
-     .then(r=>r.json().then(d=>({ok:r.ok,d}))).then(v=>{el('recordNotice').textContent=v.ok?(v.d.ranked===false?'순위 밖 기록은 서버에 보관하지 않았어':'새 순위와 리플레이가 등록됐어'):('온라인 기록 미등록: '+(v.d.error||'서버 오류'));})
+     .then(r=>r.json().then(d=>({ok:r.ok,d}))).then(v=>{el('recordNotice').textContent=v.ok?(v.d.ranked===false?'순위 밖 기록은 서버에 보관하지 않았어':(v.d.improved===false?'기존 최고 기록이 더 좋아서 순위를 유지했어':'최고 기록과 리플레이를 갱신했어')):('온라인 기록 미등록: '+(v.d.error||'서버 오류'));})
      .catch(()=>{el('recordNotice').textContent='로컬 기록 저장됨 · 온라인 기록 서버 오류';});
  }
 }
@@ -1112,7 +1152,7 @@ async function refreshLeaderboard(){const selected=isChallenge()?mode:'sprint';e
  const td=document.createElement('td'),btn=document.createElement('button');btn.className='btn';btn.textContent='▶ 보기';btn.type='button';
  btn.disabled=!v.replayId;btn.onclick=()=>viewOnlineReplay(v.replayId);td.append(btn);tr.append(td);host.appendChild(tr);}
  if(!host.children.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent='새 기록이 아직 없어.';tr.appendChild(td);host.appendChild(tr);}
- el('recordNotice').textContent='v2.4 새 순위 · 리플레이 포함 · 공인 기록 아님';
+ el('recordNotice').textContent='온라인 순위를 불러왔어.';
  }catch(e){el('recordNotice').textContent='온라인 조회 실패: '+e.message;}
 }
 el('refreshRanks').addEventListener('click',refreshLeaderboard);showLocalRecords();
@@ -1276,7 +1316,7 @@ function updateChallengeHud(){
  }else counter.hidden=true;if(!isChallenge()){info.hidden=true;info.textContent='';return;}
  info.hidden=false;const p=players[0],items=mode==='sprint'
   ?[['LINES',Math.max(0,SPRINT_LINES-Math.min(SPRINT_LINES,p.lines)),'goal'],['TIME',clockText(clockTime),''],['PIECES',p.pieces,''],['PPS',((p.pieces*1000)/Math.max(1,clockTime)).toFixed(2),'']]
-  :[['SCORE',p.blitzScore.toLocaleString('en-US'),'points'],['LEVEL',blitzLevel(p.lines),''],['PERFECT CLEAR',p.perfectClears,'goal'],['LINES',p.lines,'']];
+  :[['SCORE',p.blitzScore.toLocaleString('en-US'),'score-stat'],['LEVEL',blitzLevel(p.lines),''],['PERFECT CLEAR',p.perfectClears,'goal'],['LINES',p.lines,'']];
  // Reuse stable elements and change text only, avoiding layout-induced board shake.
  if(info.dataset.mode!==mode||info.children.length!==items.length){info.dataset.mode=mode;info.replaceChildren(...items.map(([label,,style])=>{const div=document.createElement('div');div.className='metric '+style;const n=document.createElement('span');n.textContent=label;const val=document.createElement('b');div.append(n,val);return div;}));}
  items.forEach(([,value],i)=>{const n=info.children[i].querySelector('b');if(n.textContent!==String(value))n.textContent=value;});
@@ -2076,7 +2116,7 @@ el('runEngineChecks').onclick=()=>{const out=runEngineChecks();const status=el('
  for(const v of out.results){const n=document.createElement('div');n.textContent=(v.pass?'✓ ':'✗ ')+v.name+(v.detail?' — '+v.detail:'');n.style.color=v.pass?'#a5daca':'#ff9eaa';status.append(n);}
 };
 
-window.TetrisDuel={runEngineChecks,version:'2.4',getReplay:()=>replayLast,getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
+window.TetrisDuel={runEngineChecks,version:'2.5',getReplay:()=>replayLast,getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
 updateScore();queueFill(players[0]);renderMini(players[0]);renderMini(players[1]);setOverlay(0,'ONLINE','');setOverlay(1,'WAITING','상대 플레이어');requestAnimationFrame(loop);
 })();
 </script></body></html>
