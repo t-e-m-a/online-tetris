@@ -1448,7 +1448,8 @@ let ws=null, room='',seat=-1, connected=false, readySent=false, gameStartTime=0,
 const UNDO_LIMIT=140, R_HOLD_MS=520;let soloUndo=[],rHoldAt=0,rHoldTriggered=false;
 // Send a compact, changed snapshot at most once per ~150ms.
 let lastStateSignature='', lastGridDigest='', lastFullBoardAt=0,lastWireSent=Date.now(),reconnectAttempts=0,reconnectTimer=null;
-const networkStats={stateMessages:0,stateBytes:0,totalMessages:0,pings:0};
+const networkStats={stateMessages:0,stateBytes:0,totalMessages:0,pings:0,attacksRequested:0,attacksAcknowledged:0};
+let pvpNoProofRelay=false,pvpCompatibilityWarned=false;
 const heldKeys=new Set();
 const urlParams=new URLSearchParams(location.search);
 const generateToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
@@ -1478,7 +1479,7 @@ setInterval(()=>{
 function resetInputs(){heldKeys.clear();if(typeof releaseAllTouch==='function')releaseAllTouch();for(const p of players){p.held={left:false,right:false,soft:false};}}
 async function createRoom(){reconnectAttempts=0;try{workerBase=getBase();statusLine('방 생성 중…');const res=await fetch(workerBase+'/api/create',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:sessionToken})});const data=await res.json();if(!res.ok)throw Error(data.error||'서버 오류');room=data.code;el('roomInput').value=room;persistentStore.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('방 생성 실패: '+e.message);}}
 async function joinRoom(){reconnectAttempts=0;try{workerBase=getBase();room=el('roomInput').value.trim().toUpperCase();if(!/^[0-9]{4}$/.test(room))throw Error('올바른 4자리 숫자 방 코드를 입력해 줘.');statusLine('방 확인 중…');const res=await fetch(workerBase+'/api/check/'+room);const data=await res.json();if(!res.ok)throw Error(data.error||'방 확인 실패');persistentStore.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('참가 실패: '+e.message);}}
-function connectRoom(retrying=false){if(ws){try{ws.close(1000,'Changing room');}catch{}}if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}connected=false;readySent=false;presence=[false,false];status='lobby';resetInputs();const endpoint=workerBase.replace(/^http/,'ws')+'/api/ws/'+room+'?token='+encodeURIComponent(sessionToken);const socket=new WebSocket(endpoint);ws=socket;statusLine('서버 연결 중…');updateRoom();socket.addEventListener('open',()=>{if(ws!==socket)return;connected=true;reconnectAttempts=0;lastWireSent=Date.now();statusLine('접속 성공 · 상대를 기다리는 중');updateRoom();});socket.addEventListener('message',e=>{if(ws!==socket)return;if(e.data==='pong')return;let msg;try{msg=JSON.parse(e.data);}catch{return;}onNetwork(msg);});socket.addEventListener('close',e=>{if(ws!==socket)return;connected=false;presence=[false,false];readySent=false;status='lobby';resetInputs();statusLine('연결 종료 ('+e.code+')');if(mode==='online'&&room&&reconnectAttempts<3){reconnectAttempts++;const attempt=reconnectAttempts;statusLine('연결 끊김 · 자동 재접속 '+attempt+'/3');reconnectTimer=setTimeout(()=>{if(!connected&&mode==='online'&&room)connectRoom(true);},1200*attempt);}setOverlay(0,'OFFLINE','서버와 연결이 종료됐어');setOverlay(1,'OFFLINE','상대 연결 끊김');updateRoom();});socket.addEventListener('error',()=>{if(ws===socket)statusLine('연결 오류 · Workers 서버 주소를 확인해 줘.');});}
+function connectRoom(retrying=false){pvpNoProofRelay=false;pvpCompatibilityWarned=false;if(ws){try{ws.close(1000,'Changing room');}catch{}}if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}connected=false;readySent=false;presence=[false,false];status='lobby';resetInputs();const endpoint=workerBase.replace(/^http/,'ws')+'/api/ws/'+room+'?token='+encodeURIComponent(sessionToken);const socket=new WebSocket(endpoint);ws=socket;statusLine('서버 연결 중…');updateRoom();socket.addEventListener('open',()=>{if(ws!==socket)return;connected=true;reconnectAttempts=0;lastWireSent=Date.now();statusLine('접속 성공 · 상대를 기다리는 중');updateRoom();});socket.addEventListener('message',e=>{if(ws!==socket)return;if(e.data==='pong')return;let msg;try{msg=JSON.parse(e.data);}catch{return;}onNetwork(msg);});socket.addEventListener('close',e=>{if(ws!==socket)return;connected=false;presence=[false,false];readySent=false;status='lobby';resetInputs();statusLine('연결 종료 ('+e.code+')');if(mode==='online'&&room&&reconnectAttempts<3){reconnectAttempts++;const attempt=reconnectAttempts;statusLine('연결 끊김 · 자동 재접속 '+attempt+'/3');reconnectTimer=setTimeout(()=>{if(!connected&&mode==='online'&&room)connectRoom(true);},1200*attempt);}setOverlay(0,'OFFLINE','서버와 연결이 종료됐어');setOverlay(1,'OFFLINE','상대 연결 끊김');updateRoom();});socket.addEventListener('error',()=>{if(ws===socket)statusLine('연결 오류 · Workers 서버 주소를 확인해 줘.');});}
 function startRound(msg){lastStateSignature='';lastGridDigest='';lastFullBoardAt=0;lastSnapshot=0;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;status='countdown';readySent=false;clockTime=0;feed=[];el('feed').innerHTML='';players=[newPlayer(0),newPlayer(1)];if(Array.isArray(msg.seeds)){players[0].rng=(msg.seeds[seat]>>>0)||players[0].rng;players[1].rng=(msg.seeds[1-seat]>>>0)||players[1].rng;}resetInputs();queueFill(players[1]);spawn(players[0]);setOverlay(0,'3','준비');setOverlay(1,'3','상대 준비');gameStartTime=performance.now()+2300;countdownAt=performance.now();el('roundText').textContent='ROUND '+round+' · COUNTDOWN';updateScore();updateRoom();}
 // Remote-only render smoothing. No extra WebSocket messages and no changes to
 // game state or collision calculations; short tweens merely blend received tiles.
@@ -1490,7 +1491,7 @@ function remoteDisplayPos(p,now){
  return {x:m.fromX+(m.toX-m.fromX)*k,y:m.fromY+(m.toY-m.fromY)*k};
 }
 function onNetwork(msg){
- if(msg.type==='welcome'){seat=msg.seat;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;updateScore();statusLine('플레이어 '+(seat+1)+' 참가 완료 · 상대를 기다리는 중');}
+ if(msg.type==='welcome'){pvpNoProofRelay=msg.protocol>=3&&msg.attackRelay==='no-proof';pvpCompatibilityWarned=false;seat=msg.seat;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;updateScore();statusLine('플레이어 '+(seat+1)+' 참가 완료 · 상대를 기다리는 중');}
  if(msg.type==='presence'){if(seat<0)return;presence=msg.players;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];updateScore();if(msg.phase==='lobby'){status='lobby';setOverlay(0,'WAITING','두 사람이 준비하면 시작');setOverlay(1,'WAITING',playersConnected()?'상대 준비 대기':'상대 입장 대기');statusLine(playersConnected()?'상대 접속 완료 · 준비 완료 버튼을 눌러 줘.':'방에 접속했어 · 초대 링크를 공유해 줘.');}else if(msg.phase==='over'&&status!=='over'){status='over';}else if(msg.phase==='countdown'&&status==='lobby'){statusLine('곧 시작해.');}else if(msg.phase==='running'&&status==='lobby'){statusLine('진행 중인 경기야. 다시 시작하려면 상대와 재접속해 줘.');}updateRoom();}
  if(msg.type==='start'){startRound(msg);statusLine('양쪽 모두 준비 완료 · 카운트다운');}
  if(msg.type==='go'&&status==='countdown'){startPlaying(performance.now());}
@@ -1536,7 +1537,9 @@ function onNetwork(msg){
    el('roundText').textContent=msg.matchOver?(mine?'MATCH WINNER':'MATCH LOST'):'ROUND '+round+' · '+(mine?'WIN':'LOSS');
    statusLine(msg.matchOver?'매치 종료 · 양쪽 모두 준비하면 새 대전':'라운드 종료 · 양쪽 모두 준비하면 다음 라운드');updateScore();updateRoom();
  }
- if(msg.type==='proofRejected'){statusLine('공격 검증 거절: '+String(msg.reason||'배치 오류').slice(0,60));}
+ if(msg.type==='attackAck'){networkStats.attacksAcknowledged+=Number(msg.lines)||0;}
+ if(msg.type==='proofRejected'){statusLine('공격이 서버에서 거절됐어. PvP Worker v2.9.1 업데이트가 필요해.');}
+
  if(msg.type==='interrupted'){finishReplayCapture();status='lobby';readySent=false;resetInputs();wins=[0,0];round=1;updateScore();setOverlay(0,'CANCELLED','상대 연결 종료');setOverlay(1,'OFFLINE','다른 플레이어를 기다려 줘.');statusLine(msg.message||'연결 종료');updateRoom();}
 }
 function startPlaying(now){status='running';roundStart=now;startReplayCapture();hideOverlay(0);hideOverlay(1);el('roundText').textContent='ROUND '+round+' · PLAYING';statusLine('대전 중 · 내 보드를 조작해 줘.');updateRoom();sendSnapshot();}
@@ -2022,7 +2025,15 @@ const pending=p.incoming.reduce((s,a)=>s+a.lines,0);const doubleDefense=p.pieces
 for(const pkt of p.incoming){if(rest<=0)break;const cap=rest*(doubleDefense?2:1),used=Math.min(cap,pkt.lines);pkt.lines-=used;blocked+=used;rest-=doubleDefense?Math.ceil(used/2):used;}
 p.incoming=p.incoming.filter(pkt=>pkt.lines>0);p.blocked+=blocked;
 if(rest<=0){addFeed('<strong>ME</strong> DEFENSE −'+blocked);return;}
-const transmitted=Math.min(20,Math.max(0,Math.floor(rest)));if(mode!=='online')p.sent+=rest;else if(transmitted&&send('attack',{lines:transmitted}))p.sent+=transmitted;addFeed('<strong>ME</strong> ATTACK +'+(mode==='online'?transmitted:rest)+(blocked?' · CANCEL '+blocked:''));if(!isPC){addEffect(p,'attack',now,{power:Math.min(rest,12)});impactSound('attack',Math.min(rest,12));}
+const transmitted=Math.min(20,Math.max(0,Math.floor(rest)));if(mode!=='online')p.sent+=rest;
+else if(transmitted&&send('attack',{lines:transmitted})){
+ p.sent+=transmitted;networkStats.attacksRequested+=transmitted;
+ // Legacy proof-verifying servers can discard this packet. Do not claim
+ // delivery confirmation until the updated PvP Worker returns attackAck.
+ if(!pvpNoProofRelay&&!pvpCompatibilityWarned){pvpCompatibilityWarned=true;
+  statusLine('서버가 구형일 수 있어. 공격이 안 들어가면 PvP Worker도 v2.9.1로 배포해.');
+ }
+}addFeed('<strong>ME</strong> ATTACK +'+(mode==='online'?transmitted:rest)+(blocked?' · CANCEL '+blocked:''));if(!isPC){addEffect(p,'attack',now,{power:Math.min(rest,12)});impactSound('attack',Math.min(rest,12));}
 }
 function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=8)break;if(now<pkt.active)continue;const count=Math.min(pkt.lines,8-added);for(let j=0;j<count;j++){
  if(p.grid[0].some(Boolean)){p.dead=true;roundEnd(p.i);return;}
@@ -2527,7 +2538,7 @@ el('runEngineChecks').onclick=()=>{const out=runEngineChecks();const status=el('
  for(const v of out.results){const n=document.createElement('div');n.textContent=(v.pass?'✓ ':'✗ ')+v.name+(v.detail?' — '+v.detail:'');n.style.color=v.pass?'#a5daca':'#ff9eaa';status.append(n);}
 };
 
-window.TetrisDuel={runEngineChecks,version:'2.8',getReplay:()=>replayLast,getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
+window.TetrisDuel={runEngineChecks,version:'2.9.1',getReplay:()=>replayLast,getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats,pvpRelayCompatible:pvpNoProofRelay},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
 updateScore();queueFill(players[0]);renderMini(players[0]);renderMini(players[1]);setOverlay(0,'ONLINE','');setOverlay(1,'WAITING','상대 플레이어');requestAnimationFrame(loop);
 })();
 </script></body></html>
