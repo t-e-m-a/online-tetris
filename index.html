@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090c14">
-<title>TetrisDuel v2.0 — Online Tetris</title>
+<title>TetrisDuel v2.1 — Online Tetris</title>
 <style>
 :root{color-scheme:dark;--bg:#080c15;--surface:#11192a;--text:#edf3ff;--muted:#8091aa;--border:#253248;--cyan:#68d7ff;--pink:#f294cd}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Pretendard,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
@@ -250,6 +250,35 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 /* Low-usage: keep record controls readable on small screens. */
 .record-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .record-controls input[type=checkbox]{width:15px;height:15px;accent-color:#7fe3ef}
+
+/* v2.1: compact profile bar in the existing masthead. */
+.mast{position:relative;flex-wrap:wrap}
+.profilebar{display:flex;gap:8px;align-items:center;flex:1 1 260px;justify-content:flex-end;min-width:0}
+.profile-nickname{display:flex;align-items:center;gap:6px;font-size:10px;color:#91acc7;white-space:nowrap;font-weight:750}
+.profile-nickname input{width:92px;max-width:24vw;height:29px;border:1px solid #37516b;background:#091321;color:#e3f5ff;border-radius:6px;padding:4px 7px;font-size:11px;letter-spacing:0}
+.profile-best{color:#91aebf;font-variant-numeric:tabular-nums;font-size:10px;white-space:nowrap}
+.profilebar .recordspanel{min-width:0;flex-shrink:0}
+.profilebar .recordspanel>summary{padding:7px 9px;white-space:nowrap}
+.profilebar .recordspanel .details-body{position:absolute;z-index:35;right:0;top:calc(100% + 6px);width:min(390px,calc(100vw - 18px));max-width:none;background:#111e2f;border:1px solid #466280;border-radius:10px;padding:13px;box-shadow:0 18px 55px #000d}
+.profilebar .recordspanel .record-note{line-height:1.5}
+.profilebar .replay-open{padding:7px 10px}
+@media(max-width:780px){.profilebar{width:100%;order:3;justify-content:space-between;flex-wrap:wrap;gap:5px}.profile-best{flex:1;text-align:center}}
+@media(max-width:410px){.profile-best{order:4;flex-basis:100%;text-align:left}.profile-nickname input{width:90px}.profilebar .recordspanel .details-body{max-height:72dvh;overflow-y:auto}}
+/* Replay is an overlay; opening it never resizes the game board. */
+.replay-overlay{position:fixed;z-index:120;inset:0;background:rgba(0,5,13,.88);display:flex;align-items:center;justify-content:center;padding:12px;overflow-y:auto}
+.replay-window{background:#101a2a;border:1px solid #41566f;border-radius:12px;box-shadow:0 20px 80px #000d;width:min(710px,98vw);max-height:calc(100dvh - 24px);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.replay-top{display:flex;justify-content:space-between;align-items:center;gap:10px;color:#e1f2ff}.replay-top strong{letter-spacing:.12em;color:#79dfff}.replay-top span{font-size:11px;color:#8aa4bc}
+.replay-layout{display:grid;grid-template-columns:minmax(140px,300px) minmax(120px,1fr);justify-content:center;gap:14px;min-height:0}
+#replayCanvas{width:min(100%,min(300px,calc((100dvh - 215px)/2)));height:auto;aspect-ratio:1/2;justify-self:center;border:2px solid #7196b1;background:#071120}
+.replay-side{padding:6px;display:flex;flex-direction:column;gap:12px;min-width:0}
+#replayMode{color:#80ddf8;font-weight:850;letter-spacing:.12em;font-size:13px}
+.replay-view{display:flex;flex-wrap:wrap;gap:5px}.replay-view button{padding:7px 8px}
+.replay-stat{font-size:12px;line-height:2;color:#c5d6e9;white-space:pre-line;font-variant-numeric:tabular-nums}
+.replay-events{font-size:11px;color:#7fa3b8;margin-top:auto}
+#replaySeek{width:100%;accent-color:#70d8f6;min-height:18px}
+.replay-controls{display:flex;flex-wrap:wrap;align-items:center;gap:7px}.replay-controls label{font-size:11px;color:#aec2d7}.replay-controls select{background:#152a40;color:#eaf4ff;border:1px solid #466680;padding:7px;border-radius:6px}
+#replayTime{margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;color:#d2eafa}.replay-explain{font-size:10px;color:#7894ad;margin:0}
+@media(max-width:480px){.replay-layout{grid-template-columns:1fr 116px;gap:8px}.replay-window{padding:8px;gap:7px}.replay-stat{font-size:10px}.replay-view{display:grid;grid-template-columns:1fr}.replay-view button{font-size:10px;padding:5px}}
 </style>
 </head>
 <body>
@@ -257,6 +286,16 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 <header class="mast">
   <div class="brand">Tetris<span>Duel</span></div>
   <div class="actions"><div class="mode-tabs" role="group" aria-label="게임 모드"><button id="modeOnline" class="mode-tab selected" aria-pressed="true">온라인 대전</button><button id="modeSolo" class="mode-tab" aria-pressed="false">자유 연습</button><button id="modeSprint" class="mode-tab" aria-pressed="false">40 LINES</button><button id="modeBlitz" class="mode-tab" aria-pressed="false">BLITZ</button></div><button class="btn soundbtn" id="soundBtn" aria-label="사운드 켜기/끄기" title="사운드">♪</button></div>
+  <div class="profilebar">
+    <label class="profile-nickname" title="대전/기록에 사용할 닉네임">닉네임 <input id="recordNickname" maxlength="16" placeholder="PLAYER" autocomplete="off" spellcheck="false"></label>
+    <span class="profile-best" id="quickBest" title="이 브라우저의 개인 최고 기록">40L — · BLITZ —</span>
+    <details class="recordspanel" id="recordsPanel"><summary>최고 기록</summary><div class="details-body">
+      <div class="record-controls"><label class="field"><input id="shareRecords" type="checkbox"> 온라인 기록 제출</label><button id="refreshRanks" class="btn" type="button">온라인 기록 조회</button></div>
+      <p class="record-note">개인 기록은 자동 저장돼. 온라인 기록은 직접 선택할 때만 제출되며 비공식 순위야.</p>
+      <div id="localRecords" class="record-note"></div><div id="recordNotice"></div><table class="records-table"><thead><tr><th>#</th><th>이름</th><th>기록</th><th>PC</th></tr></thead><tbody id="rankingRows"><tr><td colspan="4">조회하면 온라인 기록이 표시돼.</td></tr></tbody></table>
+    </div></details>
+    <button class="btn replay-open" id="replayOpen" type="button" title="마지막 플레이를 재생" disabled>리플레이</button>
+  </div>
 </header>
 <section id="onlinePanel" class="online-panel">
  <div class="online-grid">
@@ -315,17 +354,24 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
  <details class="controlbind" id="keySettings"><summary>키 설정</summary><div class="details-body">
   <div class="bind-grid" id="keyBindGrid"></div><p id="bindNotice" class="bind-note">버튼을 누르고 원하는 키를 눌러. Esc로 취소.</p><button class="btn" type="button" id="resetKeys">키 초기화</button>
  </div></details>
- <details class="recordspanel" id="recordsPanel"><summary>최고 기록</summary><div class="details-body">
-  <div class="record-controls"><label class="field">닉네임 <input id="recordNickname" maxlength="16" placeholder="PLAYER" autocomplete="off"></label><label class="field" style="white-space:nowrap"><input id="shareRecords" type="checkbox"> 온라인 기록 제출</label><button id="refreshRanks" class="btn" type="button">온라인 기록 조회</button></div>
-  <p class="record-note">로컬 최고 기록은 자동 저장돼. 온라인 제출은 선택할 때만 서버를 사용해. 온라인 순위는 비공식 기록이야.</p>
-  <div id="localRecords" class="record-note"></div><div id="recordNotice"></div><table class="records-table"><thead><tr><th>#</th><th>이름</th><th>기록</th><th>PC</th></tr></thead><tbody id="rankingRows"><tr><td colspan="4">기록을 조회할 수 있어.</td></tr></tbody></table>
- </div></details>
  <details class="soundpack" id="soundpackPanel"><summary>효과음 설정</summary><div class="details-body">
   <div id="soundpackGrid" class="soundpack-grid"></div>
   <div class="soundpack-actions"><span id="soundpackStatus" class="status">사용 가능한 효과음 파일을 직접 지정할 수 있어. 등록한 파일은 이 브라우저에만 저장돼.</span><button type="button" id="soundpackClear" class="btn">파일 초기화</button></div>
  </div></details>
 </div>
 </main>
+<div id="replayOverlay" class="replay-overlay" hidden role="dialog" aria-modal="true" aria-label="리플레이 재생기">
+ <div class="replay-window">
+  <div class="replay-top"><div><strong>REPLAY</strong><span id="replayTitle"> 마지막 플레이</span></div><button id="replayClose" class="btn" type="button">닫기 ✕</button></div>
+  <div class="replay-layout"><canvas id="replayCanvas" width="300" height="600" aria-label="리플레이 게임판"></canvas>
+    <div class="replay-side"><div id="replayMode">PRACTICE</div><div class="replay-view"><button id="replaySelf" type="button" class="btn primary">내 화면</button><button id="replayOpponent" type="button" class="btn">상대</button></div><div class="replay-stat" id="replayStats">재생을 시작해.</div><div id="replayEvents" class="replay-events"></div></div>
+  </div>
+  <input type="range" min="0" max="1000" step="10" value="0" id="replaySeek" aria-label="리플레이 위치" />
+  <div class="replay-controls"><button class="btn primary" type="button" id="replayPlay">▶ 재생</button><button class="btn" id="replayBack" type="button">−5초</button><button class="btn" id="replayForward" type="button">+5초</button><label>속도 <select id="replaySpeed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="4">4×</option></select></label><span id="replayTime">00:00.000 / 00:00.000</span></div>
+  <p class="replay-explain">로컬 상태 스냅샷 재생 · 조작 로그 기록 · 서버 통신 없음</p>
+ </div>
+</div>
+
 <script>
 (()=>{'use strict';
 const W=10,H=40,V=20,CELL=30,TYPES=['I','J','L','O','S','T','Z'];
@@ -358,7 +404,15 @@ const I_KICKS={
  '3>0':[[0,0],[1,0],[-2,0],[1,-2],[-2,1]],
  '0>3':[[0,0],[-1,0],[2,0],[2,-1],[-1,2]]};
 // 원본의 모든 180도 전이 표를 복제한 것은 아니며 주요 킥을 재현하는 근사 테이블.
-const KICKS180=[[0,0],[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1],[2,0],[-2,0],[1,-1],[-1,-1]];
+// Orientation-aware 180° kick candidates, conservatively restricted vs the previous
+// universal 11-kick table (which could move through slots that TETR.IO rejects).
+// Still a documented approximation, not a verified byte-for-byte TETR.IO kick table.
+const KICKS180={
+ '0>2':[[0,0],[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1],[2,0],[-2,0]],
+ '2>0':[[0,0],[0,1],[-1,0],[1,0],[0,-1],[-1,1],[1,1],[-2,0],[2,0]],
+ '1>3':[[0,0],[1,0],[-1,0],[0,1],[1,1],[-1,1]],
+ '3>1':[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]]
+};
 const KEYMAP=[{
  ArrowLeft:'left',ArrowRight:'right',ArrowDown:'soft',Space:'hard',KeyZ:'ccw',KeyX:'cw',ArrowUp:'cw',KeyA:'flip',KeyC:'hold',ShiftLeft:'hold',ShiftRight:'hold',ControlLeft:'ccw'
 },{KeyJ:'left',KeyL:'right',KeyK:'soft',KeyI:'hard',KeyU:'ccw',KeyO:'cw',KeyP:'flip',KeyH:'hold'}];
@@ -628,6 +682,7 @@ let recordTicket=null,onlineRecordReady=false,recordRunCounter=0;
 function savedRecords(){try{return JSON.parse(persistentStore.getItem(RECORD_KEY)||'{}')||{};}catch{return {};}}
 function showLocalRecords(){const x=savedRecords();const f=n=>n==null?'—':n;
  el('localRecords').textContent=`40 LINES ${f(x.sprint?clockText(x.sprint.elapsed):null)} · PPS ${f(x.sprint?.pps)} | BLITZ ${f(x.blitz?.score?.toLocaleString('en-US'))}점 · PC ${f(x.blitz?.pc)}`;
+ el('quickBest').textContent=`40L ${f(x.sprint?clockText(x.sprint.elapsed):null)} · BLITZ ${f(x.blitz?.score?.toLocaleString('en-US'))}`;
 }
 const cleanNickname=x=>(String(x||'PLAYER').normalize('NFKC').replace(/[^A-Za-z0-9가-힣_\-]/g,'').slice(0,16)||'PLAYER');
 el('recordNickname').value=cleanNickname(persistentStore.getItem(NAME_KEY)||'PLAYER');
@@ -718,7 +773,7 @@ function onNetwork(msg){
   if(typeof d.g==='string'&&d.g.length===V*W&&/^[.IJLOSTZG]+$/.test(d.g)){
    p.grid=Array.from({length:H},(_,y)=>y<H-V?Array(W).fill(null):[...d.g.slice((y-H+V)*W,(y-H+V+1)*W)].map(ch=>ch==='.'?null:ch));
   }else if(Array.isArray(d.g)&&d.g.length===H)p.grid=d.g.map(row=>[...row].map(ch=>ch==='.'?null:ch));
-  if(d.p){const [type,rot,x,y]=d.p;let m=PIECES[type]?.map(row=>row.slice());if(m){for(let i=0;i<rot;i++)m=rotateMat(m,1);p.piece={type,m,rot,x,y};}}
+  if(d.p){const [type,rot,x,y]=d.p;let m=PIECES[type]?.map(row=>row.slice());if(m){if(type!=='O')for(let i=0;i<rot;i++)m=rotateMat(m,1);p.piece={type,m,rot,x,y};}}
   else p.piece=null;
   const changedPreview=p.hold!==(d.h||null)||p.queue.slice(0,7).join('')!==d.q;
   p.hold=d.h||null;p.queue=[...d.q];p.lines=d.l||0;p.pieces=d.n||0;p.sent=d.s||0;p.b2b=d.b||0;p.surge=d.u||0;p.incoming=[{lines:d.i||0}];
@@ -740,7 +795,7 @@ function onNetwork(msg){
    addFeed('<strong>OPP</strong> ATTACK +'+msg.lines);
  }
  if(msg.type==='roundEnd'){
-   status='over';resetInputs();readySent=false;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;
+   finishReplayCapture();status='over';resetInputs();readySent=false;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;
    const mine=msg.winner===seat;
    impactSound(mine?(msg.matchOver?'matchwin':'victory'):'defeat');
    setOverlay(0,mine?'WIN':'TOP OUT',mine?'라운드 승리':'패배',true,mine?'win':'loss');
@@ -749,9 +804,9 @@ function onNetwork(msg){
    statusLine(msg.matchOver?'매치 종료 · 양쪽 모두 준비하면 새 대전':'라운드 종료 · 양쪽 모두 준비하면 다음 라운드');updateScore();updateRoom();
  }
  if(msg.type==='proofRejected'){statusLine('공격 검증 거절: '+String(msg.reason||'배치 오류').slice(0,60));}
- if(msg.type==='interrupted'){status='lobby';readySent=false;resetInputs();wins=[0,0];round=1;updateScore();setOverlay(0,'CANCELLED','상대 연결 종료');setOverlay(1,'OFFLINE','다른 플레이어를 기다려 줘.');statusLine(msg.message||'연결 종료');updateRoom();}
+ if(msg.type==='interrupted'){finishReplayCapture();status='lobby';readySent=false;resetInputs();wins=[0,0];round=1;updateScore();setOverlay(0,'CANCELLED','상대 연결 종료');setOverlay(1,'OFFLINE','다른 플레이어를 기다려 줘.');statusLine(msg.message||'연결 종료');updateRoom();}
 }
-function startPlaying(now){status='running';roundStart=now;hideOverlay(0);hideOverlay(1);el('roundText').textContent='ROUND '+round+' · PLAYING';statusLine('대전 중 · 내 보드를 조작해 줘.');updateRoom();sendSnapshot();}
+function startPlaying(now){status='running';roundStart=now;startReplayCapture();hideOverlay(0);hideOverlay(1);el('roundText').textContent='ROUND '+round+' · PLAYING';statusLine('대전 중 · 내 보드를 조작해 줘.');updateRoom();sendSnapshot();}
 function sendSnapshot(){
  if(status!=='running')return;
  const p=players[0],t=p.piece;
@@ -821,8 +876,128 @@ function updateChallengeHud(){
  if(info.dataset.mode!==mode||info.children.length!==items.length){info.dataset.mode=mode;info.replaceChildren(...items.map(([label,,style])=>{const div=document.createElement('div');div.className='metric '+style;const n=document.createElement('span');n.textContent=label;const val=document.createElement('b');div.append(n,val);return div;}));}
  items.forEach(([,value],i)=>{const n=info.children[i].querySelector('b');if(n.textContent!==String(value))n.textContent=value;});
 }
+
+/* Local replay: snapshots (~50 ms) + key events. The actual run remains authoritative;
+   seeking only reads immutable captures and never mutates the live engine state. */
+const REPLAY_KEY='tetrisduel_last_replay_v21',REPLAY_STEP=50,REPLAY_MAX_FRAMES=12000;
+let replayCapture=null,replayLast=null,replayShowing=false,replayPausedForViewer=false;
+let replayPosition=0,replaySpeed=1,replayPlaying=false,replayView=0,replayLastTick=0;
+try{const data=JSON.parse(persistentStore.getItem(REPLAY_KEY)||'null');if(data?.version===1&&Array.isArray(data.frames)&&data.frames.length&&Array.isArray(data.boards))replayLast=data;}catch{}
+const replayCanOpen=()=>!!(replayLast?.frames?.length)&&!(status==='running'&&isChallenge())&&!(status==='running'&&mode==='online');
+function replayButtonState(){el('replayOpen').disabled=!replayCanOpen();}
+function startReplayCapture(){
+ if(replayCapture)finishReplayCapture();
+ replayCapture={version:1,mode,started:Date.now(),origin:performance.now(),seeds:players.map(p=>p.rng),
+  boards:[],boardMap:new Map(),frames:[],events:[],truncated:false};
+ replayFrame(true);
+}
+function replayPlayerSnap(p,rec){
+ const encoded=p.grid.map(row=>row.map(c=>c||'.').join('')).join('');
+ let g=rec.boardMap.get(encoded);
+ if(g===undefined){g=rec.boards.length;rec.boards.push(encoded);rec.boardMap.set(encoded,g);}
+ const a=p.piece?[p.piece.type,p.piece.rot,p.piece.x,p.piece.y]:null;
+ return {g,a,h:p.hold||'',q:p.queue.slice(0,5).join(''),n:p.pieces,l:p.lines,
+  c:p.combo,b:p.b2b,pc:p.perfectClears,s:p.sent,bs:p.blitzScore,i:p.incoming.reduce((v,x)=>v+x.lines,0)};
+}
+function replayFrame(force=false){
+ const r=replayCapture;if(!r)return;
+ const time=Math.max(0,Math.round(performance.now()-r.origin));
+ if(!force&&r.frames.length&&time-r.frames.at(-1).t<REPLAY_STEP)return;
+ if(r.frames.length>=REPLAY_MAX_FRAMES){r.truncated=true;return;}
+ const ps=players.slice(0,r.mode==='online'?2:1).map(p=>replayPlayerSnap(p,r));
+ const last=r.frames.at(-1);
+ if(last?.t===time){last.p=ps;return;}
+ r.frames.push({t:time,p:ps});
+}
+function replayInput(code,action,down){
+ const r=replayCapture;if(!r||r.events.length>200000)return;
+ r.events.push([Math.max(0,Math.round(performance.now()-r.origin)),code,action,down?1:0]);
+}
+function finishReplayCapture(){
+ const r=replayCapture;if(!r)return;
+ replayFrame(true);replayCapture=null;
+ if(!r.frames.length)return;
+ const data={version:1,mode:r.mode,started:r.started,seeds:r.seeds,boards:r.boards,
+  frames:r.frames,events:r.events,truncated:r.truncated,duration:r.frames.at(-1).t};
+ replayLast=data;
+ try{persistentStore.setItem(REPLAY_KEY,JSON.stringify(data));}catch{} // Memory playback still available on quota failure.
+ replayButtonState();
+}
+function replayFrameAt(t){
+ const f=replayLast?.frames;if(!f?.length)return null;
+ let l=0,r=f.length-1;
+ while(l<r){const m=Math.ceil((l+r)/2);if(f[m].t<=t)l=m;else r=m-1;}
+ return {frame:f[l],next:f[Math.min(l+1,f.length-1)]};
+}
+function replayDraw(){
+ if(!replayShowing||!replayLast)return;
+ const replay=replayLast,duration=replay.duration||0;
+ replayPosition=Math.max(0,Math.min(duration,replayPosition));
+ const found=replayFrameAt(replayPosition);if(!found)return;
+ const {frame,next}=found,p=frame.p[Math.min(replayView,frame.p.length-1)];if(!p)return;
+ const ctx=el('replayCanvas').getContext('2d');ctx.fillStyle='#0a1121';ctx.fillRect(0,0,300,600);
+ ctx.strokeStyle='#17253d';ctx.lineWidth=.6;
+ for(let x=1;x<W;x++){ctx.beginPath();ctx.moveTo(x*CELL+.5,0);ctx.lineTo(x*CELL+.5,600);ctx.stroke();}
+ for(let y=1;y<V;y++){ctx.beginPath();ctx.moveTo(0,y*CELL+.5);ctx.lineTo(300,y*CELL+.5);ctx.stroke();}
+ const board=replay.boards[p.g]||'';
+ for(let y=H-V;y<H;y++)for(let x=0;x<W;x++){const type=board[y*W+x];if(type&&type!=='.')tile(ctx,x*CELL,(y-H+V)*CELL,CELL,type);}
+ if(p.a){
+  const [type,rot,x,y]=p.a;
+  let m=PIECES[type];if(type!=='O')for(let i=0;i<rot;i++)m=rotateMat(m,1);
+  let dx=x,dy=y;
+  const n=next.p[Math.min(replayView,next.p.length-1)];
+  // Smooth positional display only within the same active piece and board state.
+  if(n?.a&&p.n===n.n&&p.a[0]===n.a[0]&&p.a[1]===n.a[1]&&p.g===n.g&&next.t>frame.t&&
+    Math.abs(n.a[2]-x)<=3&&Math.abs(n.a[3]-y)<=2){
+   const alpha=Math.min(1,Math.max(0,(replayPosition-frame.t)/(next.t-frame.t)));
+   dx+=(n.a[2]-x)*alpha;dy+=(n.a[3]-y)*alpha;
+  }
+  for(let i=0;i<m.length;i++)for(let j=0;j<m[i].length;j++)if(m[i][j]){
+   const py=(dy+i-H+V)*CELL;if(py>=-CELL&&py<=600)tile(ctx,(dx+j)*CELL,py,CELL,type);
+  }
+ }
+ el('replaySeek').max=String(Math.max(1,duration));el('replaySeek').value=String(Math.round(replayPosition));
+ el('replayTime').textContent=clockText(replayPosition)+' / '+clockText(duration);
+ el('replayStats').textContent=`LINES   ${p.l}\nPIECES  ${p.n}\nB2B     ${Math.max(0,p.b-1)}\nPC      ${p.pc}\nATTACK  ${p.s}`+(replay.mode==='blitz'?`\nSCORE   ${p.bs}`:'');
+ el('replayMode').textContent=({solo:'PRACTICE',sprint:'40 LINES',blitz:'BLITZ',online:'ONLINE'}[replay.mode]||replay.mode);
+ const nInput=(replay.events||[]).filter(e=>e[0]<=replayPosition).length;
+ el('replayEvents').textContent=`입력 ${nInput}회 · ${replay.frames.length}프레임`+(replay.truncated?' · 기록 상한 도달':'');
+}
+function replayOpen(){
+ if(!replayCanOpen())return;
+ if(mode==='solo'&&status==='running'){toggleSoloPause();replayPausedForViewer=true;}else replayPausedForViewer=false;
+ replayShowing=true;replayPlaying=false;replayPosition=0;replaySpeed=Number(el('replaySpeed').value)||1;replayLastTick=0;replayView=0;
+ el('replayOverlay').hidden=false;
+ el('replayTitle').textContent=' · '+new Date(replayLast.started).toLocaleString('ko-KR');
+ el('replayOpponent').hidden=replayLast.mode!=='online';
+ el('replaySelf').classList.add('primary');el('replayOpponent').classList.remove('primary');
+ el('replayPlay').textContent='▶ 재생';replayDraw();
+}
+function replayClose(){replayShowing=false;replayPlaying=false;replayLastTick=0;el('replayOverlay').hidden=true;
+ if(replayPausedForViewer){replayPausedForViewer=false;if(mode==='solo'&&status==='paused')toggleSoloPause();}
+}
+function replayTick(now){
+ if(!replayShowing)return;
+ if(replayPlaying){if(replayLastTick){replayPosition+=(Math.min(150,now-replayLastTick))*replaySpeed;}
+  if(replayPosition>=replayLast.duration){replayPosition=replayLast.duration;replayPlaying=false;el('replayPlay').textContent='▶ 재생';}
+ }
+ replayLastTick=now;replayDraw();
+}
+el('replayOpen').addEventListener('click',replayOpen);
+el('replayClose').addEventListener('click',replayClose);
+el('replayPlay').addEventListener('click',()=>{if(!replayShowing)return;
+ if(!replayPlaying&&replayPosition>=replayLast.duration)replayPosition=0;
+ replayPlaying=!replayPlaying;replayLastTick=0;el('replayPlay').textContent=replayPlaying?'Ⅱ 일시정지':'▶ 재생';});
+el('replaySeek').addEventListener('input',e=>{replayPosition=Number(e.target.value)||0;replayLastTick=0;replayDraw();});
+el('replayBack').addEventListener('click',()=>{replayPosition=Math.max(0,replayPosition-5000);replayDraw();});
+el('replayForward').addEventListener('click',()=>{replayPosition=Math.min(replayLast?.duration||0,replayPosition+5000);replayDraw();});
+el('replaySpeed').addEventListener('change',e=>{replaySpeed=Number(e.target.value)||1;});
+for(const [id,view] of [['replaySelf',0],['replayOpponent',1]])el(id).addEventListener('click',()=>{
+ replayView=view;el('replaySelf').classList.toggle('primary',view===0);el('replayOpponent').classList.toggle('primary',view===1);replayDraw();});
+replayButtonState();
+
 function chooseMode(next){
- if(mode===next)return;if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}reconnectAttempts=3;
+ if(mode===next)return;finishReplayCapture();if(replayShowing)replayClose();if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}reconnectAttempts=3;
  if(ws){const old=ws;ws=null;try{old.close(1000,'Mode changed');}catch{}}
  mode=next;recordRunCounter++;recordTicket=null;onlineRecordReady=false;connected=false;readySent=false;room='';seat=-1;presence=[false,false];soloUndo=[];resetRestartHold();
  status=isOffline()?'soloIdle':'lobby';wins=[0,0];round=1;clockTime=0;feed=[];challengeResult='';
@@ -849,7 +1024,7 @@ function chooseMode(next){
  try{history.replaceState(null,'',location.pathname);}catch{}
 }
 function startChallenge(){
- if(!isChallenge())return;
+ if(!isChallenge())return;finishReplayCapture();
  soloUndo=[];challengeResult='';status='challengeCountdown';players=[newPlayer(0),newPlayer(1)];resetInputs();
  // STRIDE: prevent S/Z/O on the initial piece while retaining a real 7-bag.
  do{players[0].queue=[];queueFill(players[0]);}while(['S','Z','O'].includes(players[0].queue[0]));
@@ -865,7 +1040,7 @@ function finishChallenge(reason,now=performance.now()){
  const p=players[0];
  if(reason==='complete'&&mode==='sprint')clockTime=Math.max(0,now-roundStart);
  if(reason==='timeout'&&mode==='blitz')clockTime=BLITZ_DURATION_MS;
- status='challengeOver';challengeResult=reason;resetInputs();keepRecord(reason);
+ finishReplayCapture();status='challengeOver';challengeResult=reason;resetInputs();keepRecord(reason);
  const success=reason==='complete'||reason==='timeout';
  const header=reason==='complete'?'40 LINES COMPLETE':reason==='timeout'?'TIME UP':'TOP OUT';
  const detail=mode==='sprint'?`${Math.min(40,p.lines)} / 40 · ${clockText(clockTime)}`:`${p.blitzScore.toLocaleString('en-US')} POINTS · PC ${p.perfectClears}`;
@@ -876,10 +1051,10 @@ function finishChallenge(reason,now=performance.now()){
  impactSound(success?'victory':'defeat');updateChallengeHud();
 }
 function startSolo(){
- if(mode!=='solo')chooseMode('solo');
+ if(mode!=='solo')chooseMode('solo');finishReplayCapture();
  soloUndo=[];status='running';players=[newPlayer(0),newPlayer(1)];queueFill(players[0]);resetInputs();
  roundStart=performance.now();clockTime=0;feed=[];el('feed').textContent='';
- spawn(players[0]);soloCheckpoint();renderMini(players[0]);renderMini(players[1]);hideOverlay(0);
+ spawn(players[0]);startReplayCapture();soloCheckpoint();renderMini(players[0]);renderMini(players[1]);hideOverlay(0);
  el('roundText').textContent='연습 중';el('soloStatus').textContent='연습 중';
  el('soloStart').textContent='다시 시작';el('soloPause').disabled=false;el('soloPause').textContent='일시정지';
 }
@@ -909,7 +1084,7 @@ function touch(p,now){const t=p.piece;if(!t)return;if(!valid(p,t.m,t.x,t.y+1)){i
 function move(p,dx,dy,now){const t=p.piece;if(!t||!valid(p,t.m,t.x+dx,t.y+dy))return false;t.x+=dx;t.y+=dy;t.lastRotate=false;if(dy>0) p.moved++;touch(p,now);return true;}
 function sonicDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}if(count){p.piece.lastRotate=false;p.moved+=count;if(mode==='blitz'){p.softDropCells+=count;p.blitzScore+=count;}}touch(p,now);}
 function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;impactSound('rotate');return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
-const tbl=dir===2?KICKS180:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);impactSound('rotate');return;}}}
+const tbl=dir===2?KICKS180[`${t.rot}>${nr}`]:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);impactSound('rotate');return;}}}
 function doHold(p){if(!p.piece||p.holdUsed)return;const current=p.piece.type;const old=p.hold;p.hold=current;p.piece=null;spawn(p,old);p.holdUsed=true;impactSound('hold');renderMini(p);}
 function hardDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}
  const t=p.piece;const blocks=[];for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c])blocks.push([(t.x+c+.5)*CELL,(t.y+r-(H-V)+.5)*CELL]);
@@ -924,21 +1099,21 @@ if(t.type==='T'){
  const total=[nw,ne,sw,se].filter(Boolean).length;
  if(total>=3){const fronts=[[nw,ne],[ne,se],[sw,se],[nw,sw]][t.rot];return (fronts[0]&&fronts[1])||(t.lastTurnDir!==2&&t.kickIndex===4)?'full':'mini';}
  // All-Mini+: 세 코너 조건을 못 채운 T도 2코너 + immobile이면 Mini.
- if(total>=2&&immobile)return 'mini';return null;
+ if(total>=2&&immobile&&mode!=='blitz')return 'mini';return null;
 }
 // J/L/S/Z/I/O는 immobile 회전만 Mini로 인정되며, 줄을 지우면 B2B를 유지한다.
-return immobile?'mini':null;
+return mode==='blitz'?null:(immobile?'mini':null);
 }
 function clearRows(p){const rows=[];const board=p.grid.filter((row,y)=>{if(row.every(Boolean)){rows.push(y);return false;}return true;});while(board.length<H)board.unshift(Array(W).fill(null));p.grid=board;return {count:rows.length,rows};}
 function attackAmount(lines,t,spin,combo,b2b,pc){const base=spin==='full'&&t==='T'?[0,2,4,6,8][lines]||0:spin==='mini'&&t==='T'?[0,.5,1,2,3][lines]||0:spin==='mini'?0:[0,.5,1,2,4][lines]||0;
 let calc=base>0?Math.floor(base*(1+.25*Math.max(0,combo))):Math.floor(Math.log(1+1.25*Math.max(0,combo)));if(b2b>=2&&(lines===4||spin&&lines>0||pc))calc+=1;if(pc)calc+=5;return Math.max(0,calc);}
-function addBlitzClearScore(p,lines,spin,type,pc,priorB2B){
+function addBlitzClearScore(p,lines,spin,type,pc,priorB2B,level){
  // BLITZ: only T corner spins score spin bonuses; other immobile spins do not.
  let base=0;
  if(spin&&type==='T')base=(spin==='full'?[400,800,1200,1600,2600]:[100,200,400,800,1600])[lines]||0;
  else base=[0,100,300,500,800][lines]||0;
  const difficult=lines>0&&(lines===4||(spin&&type==='T')||pc);
- const score=(base*(difficult&&priorB2B>0?1.5:1)+(lines>0?p.combo*50:0)+(pc?3500:0))*blitzLevel(p.lines);
+ const score=(base*(difficult&&priorB2B>0?1.5:1)+(lines>0?p.combo*50:0)+(pc?3500:0))*level;
  p.blitzScore+=Math.round(score);
 }
 function lock(p,now){const t=p.piece;if(!t||p.dead)return;const spin=classifySpin(p,t);const priorB2B=p.b2b;let overflow=false;
@@ -949,7 +1124,7 @@ if(lines&&!pc)addEffect(p,'clear',now,{rows:clearedRows,power:lines});
 if(spin&&!pc)addEffect(p,'spin',now,{type:t.type,mini:spin==='mini',x:(t.x+1.5)*CELL,y:Math.min(580,Math.max(40,(t.y+1.5-(H-V))*CELL)),power:spin==='full'?2:1});
 let label='',base=0,spike=0;
 if(lines>0){p.combo++;let difficult=(lines===4||spin!==null||pc);
- if(difficult){p.b2b+=(mode==='blitz'&&pc?2:1);}else{if(p.surge>=4){spike=p.surge;}p.b2b=0;p.surge=0;}
+ if(difficult){p.b2b+=(pc?2:1);}else{if(p.surge>=4){spike=p.surge;}p.b2b=0;p.surge=0;}
  if(difficult&&p.b2b>=5)p.surge=p.b2b-1;
  const b2bCount=Math.max(0,p.b2b-1);
  base=attackAmount(lines,t.type,spin,p.combo,b2bCount,pc);
@@ -961,7 +1136,7 @@ if(lines>0){p.combo++;let difficult=(lines===4||spin!==null||pc);
  p.glow=now+230;
  if(pc)impactSound('pc',Math.max(1,lines));else if(spin)impactSound('spin',Math.max(1,lines));else impactSound('clear',lines);
 }else{p.combo=-1;if(spin){label=(t.type==='T'?'T-SPIN':t.type+'-SPIN')+' ZERO';impactSound('spin',1);}}
-if(mode==='blitz')addBlitzClearScore(p,lines,spin,t.type,pc,priorB2B);
+if(mode==='blitz')addBlitzClearScore(p,lines,spin,t.type,pc,priorB2B,blitzLevel(p.lines));
 const total=base+spike;
 if(total>0)sendAttack(p,total,now,spike,pc);
 if(label){p.event=label;p.sub=total?`공격 ${total}줄 생성${spike?' · SURGE '+spike:''}`:'줄 제거';p.eventUntil=now+1600;}
@@ -977,7 +1152,7 @@ const pending=p.incoming.reduce((s,a)=>s+a.lines,0);const doubleDefense=p.pieces
 for(const pkt of p.incoming){if(rest<=0)break;const cap=rest*(doubleDefense?2:1),used=Math.min(cap,pkt.lines);pkt.lines-=used;blocked+=used;rest-=doubleDefense?Math.ceil(used/2):used;}
 p.incoming=p.incoming.filter(pkt=>pkt.lines>0);p.blocked+=blocked;
 if(rest<=0){addFeed('<strong>ME</strong> DEFENSE −'+blocked);return;}
-p.sent+=rest;send('attack',{lines:Math.min(20,rest)});addFeed('<strong>ME</strong> ATTACK +'+rest+(blocked?' · CANCEL '+blocked:''));if(!isPC){addEffect(p,'attack',now,{power:Math.min(rest,12)});impactSound('attack',Math.min(rest,12));}
+const transmitted=Math.min(20,Math.max(0,Math.floor(rest)));if(mode!=='online')p.sent+=rest;else if(transmitted&&send('attack',{lines:transmitted}))p.sent+=transmitted;addFeed('<strong>ME</strong> ATTACK +'+(mode==='online'?transmitted:rest)+(blocked?' · CANCEL '+blocked:''));if(!isPC){addEffect(p,'attack',now,{power:Math.min(rest,12)});impactSound('attack',Math.min(rest,12));}
 }
 function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=8)break;if(now<pkt.active)continue;const count=Math.min(pkt.lines,8-added);for(let j=0;j<count;j++){
  if(p.grid[0].some(Boolean)){p.dead=true;roundEnd(p.i);return;}
@@ -987,8 +1162,18 @@ function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=
  }pkt.lines-=count;}
 p.incoming=p.incoming.filter(pkt=>pkt.lines>0);if(added){p.event='GARBAGE +'+added;p.sub='상대 공격이 들어왔어';p.eventUntil=now+900;p.glow=now+180;addEffect(p,'garbage',now,{power:added});impactSound('garbage');}
 }
-function roundEnd(loser){if(status!=='running'||loser!==0)return;resetInputs();if(isChallenge()){finishChallenge('topout');return;}if(mode==='solo'){status='soloOver';impactSound('defeat');setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
-function updateRepeat(p,direction,now){const v=p.repeat[direction];if(!p.held[direction])return;if(now-v.at<config.das||now<p.dcdUntil)return;if(config.arr===0){while(move(p,direction==='left'?-1:1,0,now)){}v.done=true;return;}if(!v.done){move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=now;return;}if(now-v.last<config.arr)return;let count=0;while(now-v.last>=config.arr&&count++<20){const moved=move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=v.last+config.arr||now;if(!moved)break;}}
+function roundEnd(loser){if(status!=='running'||loser!==0)return;finishReplayCapture();resetInputs();if(isChallenge()){finishChallenge('topout');return;}if(mode==='solo'){status='soloOver';impactSound('defeat');setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
+function updateRepeat(p,direction,now){
+ const v=p.repeat[direction];if(!p.held[direction]||now-v.at<config.das||now<p.dcdUntil)return;
+ const dx=direction==='left'?-1:1;
+ if(config.arr===0){while(move(p,dx,0,now)){}v.done=true;v.last=now;return;}
+ if(!v.done){move(p,dx,0,now);v.done=true;v.last=now;return;}
+ const elapsed=now-v.last;if(elapsed<config.arr)return;
+ const moves=Math.min(10,Math.max(1,Math.floor(elapsed/config.arr)));
+ for(let n=0;n<moves;n++)if(!move(p,dx,0,now))break;
+ // Prevent backlog from a tab suspension, a direction swap or a slow frame.
+ v.last=now-Math.min(config.arr,Math.max(0,elapsed%config.arr));
+}
 // Fixed-step physics. Tick timestamps are derived from the CURRENT frame clock,
 // never from a separately accumulated clock that can drift behind performance.now().
 // Discard a long suspension rather than trying to catch up hundreds of old ticks.
@@ -1013,7 +1198,7 @@ if(status==='countdown'){
 if(status==='challengeCountdown'){
  const delta=now-challengeCountdownAt;const stage=delta<300?'READY':delta<600?'SET':'GO';
  if(el('overlay0').querySelector('.huge').textContent!==stage)setOverlay(0,stage,'');
- if(delta>=600){status='running';roundStart=now;clockTime=0;challengeGoUntil=now+150;el('soloStatus').textContent=mode==='sprint'?'40 LINES 진행 중':'BLITZ 진행 중';}
+ if(delta>=600){status='running';roundStart=now;clockTime=0;challengeGoUntil=now+150;startReplayCapture();el('soloStatus').textContent=mode==='sprint'?'40 LINES 진행 중':'BLITZ 진행 중';}
 }
 if(status==='running'){
  clockTime=now-roundStart;
@@ -1023,7 +1208,7 @@ if(status==='running'){
  if(!physPrev){physPrev=now;physDebt=0;}
  const elapsed=now-physPrev;physPrev=now;
  if(elapsed>=0&&elapsed<=MAX_PHYS_GAP){physDebt+=elapsed;}
- else{physDebt=0;} // Tab switch, browser throttling or a long frame stall.
+ else{physDebt=0;for(const side of ['left','right']){const p=players[0];if(p.held[side]){p.repeat[side].last=now;p.repeat[side].at=now;p.repeat[side].done=false;}}} // Reset DAS after a long stall, never burst through the wall.
  let stepsTaken=0;
  while(physDebt>=PHYS_STEP&&stepsTaken<15&&status==='running'){
   // Tie DAS/ARR, DCD, gravity and lock timers to the same wall clock as key events.
@@ -1033,18 +1218,21 @@ if(status==='running'){
  }
  if(stepsTaken>=15)physDebt=0;
  if(now-lastSnapshot>=150){lastSnapshot=now;sendSnapshot();}
+ replayFrame();
  if(isChallenge())updateChallengeHud();
 }
 if(status!=='running'){physPrev=0;physDebt=0;}
 loop.prev=now;
 for(const p of players){renderBoard(p,now);renderHud(p,now);}
+replayTick(now);replayButtonState();
 }
-function handleDown(e){if(e.target?.matches?.('input,textarea,[contenteditable]'))return;const code=e.code;
+function handleDown(e){if(replayShowing){if(e.code==='Escape'){e.preventDefault();replayClose();}return;}if(e.target?.matches?.('input,textarea,select,[contenteditable]'))return;const code=e.code;
 if(mode==='solo'&&(e.ctrlKey||e.metaKey)&&code==='KeyZ'){e.preventDefault();if(!e.repeat)undoSolo();return;}
 if(mode==='solo'&&code==='KeyR'){e.preventDefault();if(!rHoldAt&&!e.repeat){rHoldAt=performance.now();rHoldTriggered=false;}return;}
 if(isChallenge()&&code==='KeyR'){e.preventDefault();if(!e.repeat)startChallenge();return;}
-if(!KEYMAP[0][code])return;e.preventDefault();if(e.repeat||heldKeys.has(code))return;heldKeys.add(code);if(status!=='running')return;const action=KEYMAP[0][code],p=players[0],now=performance.now();if(['left','right','soft'].includes(action)){if(action==='soft'){p.held.soft=true;act(p,'soft',now);}else{p.held[action]=true;p.repeat[action]={at:now,last:now,done:false};act(p,action,now);}}else act(p,action,now);}
-function handleUp(e){if(e.code==='KeyR'){resetRestartHold();return;}heldKeys.delete(e.code);const action=KEYMAP[0][e.code];if(action&&['left','right','soft'].includes(action))players[0].held[action]=false;}
+if(!KEYMAP[0][code])return;e.preventDefault();if(e.repeat||heldKeys.has(code))return;heldKeys.add(code);if(status!=='running')return;const action=KEYMAP[0][code],p=players[0],now=performance.now();replayInput(code,action,true);if(['left','right','soft'].includes(action)){if(action==='soft'){p.held.soft=true;act(p,'soft',now);}else{p.held[action]=true;p.repeat[action]={at:now,last:now,done:config.das<=0};act(p,action,now);}}else act(p,action,now);replayFrame(true);}
+function handleUp(e){if(replayShowing)return;if(e.code==='KeyR'){resetRestartHold();return;}if(heldKeys.has(e.code))replayInput(e.code,KEYMAP[0][e.code]||'',false);heldKeys.delete(e.code);const action=KEYMAP[0][e.code];if(action&&['left','right','soft'].includes(action)){players[0].held[action]=false;if(action==='left'||action==='right'){const opposite=action==='left'?'right':'left';if(players[0].held[opposite])players[0].repeat[opposite].last=performance.now();}}}
+window.addEventListener('pagehide',()=>{if(replayCapture)finishReplayCapture();});
 window.addEventListener('keydown',handleDown);window.addEventListener('keyup',handleUp);window.addEventListener('blur',()=>{resetInputs();resetRestartHold();});document.addEventListener('visibilitychange',()=>{if(document.hidden){resetInputs();resetRestartHold();}});
 
 function rectRound(ctx,x,y,w,h,r=3){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
@@ -1162,7 +1350,7 @@ if(evt.dataset.display!==eventKey){evt.dataset.display=eventKey;evt.classList.to
  if(active){const s=document.createElement('span');s.className='sub';s.textContent=p.sub;evt.appendChild(s);}}
 
 }
-window.TetrisDuel={version:'2.0.1-lite',getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
+window.TetrisDuel={version:'2.1',getReplay:()=>replayLast,getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
 updateScore();queueFill(players[0]);renderMini(players[0]);renderMini(players[1]);setOverlay(0,'ONLINE','방을 만들거나 참가해');setOverlay(1,'WAITING','상대 플레이어');requestAnimationFrame(loop);
 })();
 </script></body></html>
