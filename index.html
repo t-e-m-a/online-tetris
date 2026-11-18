@@ -1,8 +1,10 @@
-<html lang="ko"><head>
+<!doctype html>
+<html lang="ko">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090c14">
-<title>TetrisDuel v2.1 — Online Tetris</title>
+<title>TetrisDuel v2.0 — Online Tetris</title>
 <style>
 :root{color-scheme:dark;--bg:#080c15;--surface:#11192a;--text:#edf3ff;--muted:#8091aa;--border:#253248;--cyan:#68d7ff;--pink:#f294cd}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Pretendard,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
@@ -248,125 +250,51 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 /* Low-usage: keep record controls readable on small screens. */
 .record-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .record-controls input[type=checkbox]{width:15px;height:15px;accent-color:#7fe3ef}
-
-/* v2.1 ergonomic layout refinements for tablets and short landscape views */
-@media(min-width:940px){
- .touch-mode.solo-mode .station,.touch-mode.solo-mode.challenge-mode .station{
-  --compact-board:min(390px,max(125px,calc((100dvh - 315px)/2)));--compact-side:70px;--compact-gap:6px
- }
-}
-@media(min-width:521px) and (max-width:939px){
- .touch-mode.solo-mode .station,.touch-mode.solo-mode.challenge-mode .station{
-  --compact-board:min(420px,max(125px,calc((100dvh - 350px)/2)))
- }
-}
-@media (orientation:landscape) and (max-height:550px){
- .touch-mode .practice-panel,.touch-mode .match,.touch-mode .bottom{display:none!important}
- .touch-mode .shell{gap:2px;padding:2px 4px 110px;min-height:0}
- .touch-mode .mast{min-height:34px}
- .touch-mode.solo-mode .station,.touch-mode.solo-mode.challenge-mode .station{
-  --compact-board:min(190px,max(90px,calc((100dvh - 185px)/2)));--compact-side:45px;--compact-gap:4px
- }
- .touch-mode .player{padding:3px 7px}.touch-mode .player-head{margin-bottom:2px}
- .touch-mode .event{height:16px;margin-top:2px}
-}
-/* v2.1 mobile mode: never enabled automatically. No effect on keyboard-only mode. */
-.touch-pad[hidden],.replay-shade[hidden]{display:none!important}
-.touch-pad{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,780px);z-index:80;
- display:grid;grid-template-columns:38% 1fr;gap:12px;padding:10px 12px max(12px,env(safe-area-inset-bottom));
- background:linear-gradient(180deg,#0d1420ee,#111c2bf8);border:1px solid #455b7b;border-bottom:0;
- border-radius:16px 16px 0 0;box-shadow:0 -14px 36px #000a;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.touch-group{display:grid;gap:7px;align-items:stretch;min-width:0}
-.touch-move{grid-template-columns:repeat(3,minmax(0,1fr));align-items:end}
-.touch-actions{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,54px)}
-.touch-key{border-radius:13px;border:1px solid #40516c;color:#ecf5ff;background:#253753;font-weight:950;font-size:22px;
- min-height:54px;min-width:0;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;
- -webkit-tap-highlight-color:transparent;box-shadow:inset 0 2px #ffffff14,0 4px 10px #0007;transition:background .06s}
-.touch-key.mini{font-size:12px;letter-spacing:.2px}.touch-key.drop{background:#45bad7;color:#06141e;border-color:#93f2fa;font-size:16px;grid-column:3/5;grid-row:2}
-.touch-actions [data-act="flip"]{grid-column:1;grid-row:2}
-.touch-actions #touchRestart{grid-column:2;grid-row:2}
-.touch-actions #touchUndo{grid-column:1;grid-row:1}
-.touch-actions [data-act="hold"]{grid-column:2;grid-row:1}
-.touch-actions [data-act="ccw"]{grid-column:3;grid-row:1}
-.touch-actions [data-act="cw"]{grid-column:4;grid-row:1}
-.touch-key.active{background:#70d9ee;color:#041321;transform:translateY(2px);box-shadow:inset 0 3px 11px #0003}
-.touch-key:disabled{opacity:.4;cursor:default}
-body.touch-mode{overscroll-behavior-y:contain}
-.touch-mode .shell{padding-bottom:calc(166px + env(safe-area-inset-bottom));}
-.touch-mode .arena{margin-bottom:0}
-@media(max-width:939px){.touch-mode .bottom{overflow-x:auto;max-width:100vw}}
-@media(max-width:520px){
- .touch-pad{gap:6px;padding:8px 7px max(7px,env(safe-area-inset-bottom));grid-template-columns:38% 1fr}
- .touch-group{gap:4px}.touch-actions{grid-template-rows:repeat(2,49px)}
- .touch-key{font-size:18px;min-height:49px;border-radius:11px}.touch-key.mini{font-size:10px}
- .touch-mode .shell{padding-bottom:calc(140px + env(safe-area-inset-bottom));gap:3px}
- .touch-mode .solo-mode .station,.touch-mode.solo-mode .station,.touch-mode.solo-mode.challenge-mode .station{--compact-board:min(285px,max(105px,calc((100dvh - 375px)/2)));--compact-side:40px;--compact-gap:3px}
- .touch-mode .station{--compact-board:min(185px,max(80px,calc((100dvh - 370px)/2)));--compact-side:28px;--compact-gap:2px}
- .touch-mode .smallstat{display:none}.touch-mode .event{height:24px}
-}
-@media (orientation:landscape) and (max-height:550px){
- .touch-pad{width:min(100%,720px);padding:5px 8px;grid-template-columns:40% 1fr}
- .touch-actions{grid-template-rows:repeat(2,38px)}.touch-key{min-height:38px;font-size:16px}
- .touch-mode .shell{padding-bottom:105px}
- .touch-mode.solo-mode .station,.touch-mode.solo-mode.challenge-mode .station{--compact-board:min(210px,max(100px,calc((100dvh - 168px)/2)))}
-}
-.replay-shade{position:fixed;z-index:100;inset:0;display:grid;place-items:center;padding:12px;background:#03060cdd;backdrop-filter:blur(5px)}
-.replay-panel{background:#111b2d;border:1px solid #455b78;border-radius:14px;width:min(95vw,610px);max-height:96dvh;overflow:auto;padding:13px;display:flex;flex-direction:column;gap:8px}
-.replay-top,.replay-buttons{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.replay-top strong{font-size:16px}
-.replay-stage{display:flex;gap:14px;align-items:flex-start;justify-content:center;min-height:0}
-#replayCanvas{width:min(36dvh,280px,50vw);height:auto;aspect-ratio:1/2;border:2px solid #63839e;border-radius:5px;background:#0a1121}
-.replay-info{display:flex;flex-direction:column;gap:12px;min-width:0;max-width:180px;font-size:12px;color:#b9cee5;line-height:1.4;word-wrap:break-word}
-.replay-info b{font-size:17px;color:#e3f8ff;font-variant-numeric:tabular-nums}
-#replayEvent{color:#ffe4a5;font-weight:800}
-#replaySeek{width:100%;accent-color:#70dcea;touch-action:pan-x}
-.replay-buttons label{display:flex;align-items:center;gap:7px;font-size:11px}.replay-buttons select{padding:7px;background:#17243b;color:#dff2ff;border:1px solid #425b78;border-radius:6px}
-.replay-caption{font-size:10px;color:#9caec4;margin:0}
-@media(max-width:440px){.replay-panel{padding:9px}.replay-info{max-width:120px;font-size:11px;gap:7px}}
 </style>
 </head>
 <body>
 <main class="shell">
 <header class="mast">
   <div class="brand">Tetris<span>Duel</span></div>
-  <div class="actions"><div class="mode-tabs" role="group" aria-label="게임 모드"><button id="modeOnline" class="mode-tab selected" aria-pressed="true">온라인 대전</button><button id="modeSolo" class="mode-tab" aria-pressed="false">자유 연습</button><button id="modeSprint" class="mode-tab" aria-pressed="false">40 LINES</button><button id="modeBlitz" class="mode-tab" aria-pressed="false">BLITZ</button></div><button class="btn" id="mobileToggle" type="button" aria-pressed="false" title="터치 조작 모드">모바일 OFF</button><button class="btn soundbtn" id="soundBtn" aria-label="사운드 켜기/끄기" title="소리 켜짐" aria-pressed="true" style="color: rgb(95, 240, 255);">♪</button></div>
+  <div class="actions"><div class="mode-tabs" role="group" aria-label="게임 모드"><button id="modeOnline" class="mode-tab selected" aria-pressed="true">온라인 대전</button><button id="modeSolo" class="mode-tab" aria-pressed="false">자유 연습</button><button id="modeSprint" class="mode-tab" aria-pressed="false">40 LINES</button><button id="modeBlitz" class="mode-tab" aria-pressed="false">BLITZ</button></div><button class="btn soundbtn" id="soundBtn" aria-label="사운드 켜기/끄기" title="사운드">♪</button></div>
 </header>
 <section id="onlinePanel" class="online-panel">
  <div class="online-grid">
   <label class="field">방 코드 <input type="text" id="roomInput" placeholder="4자리" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocapitalize="off" spellcheck="false"></label>
   <button class="btn primary" id="createRoom">방 만들기</button>
   <button class="btn" id="joinRoom">참가</button>
-  <button class="btn" id="copyInvite" disabled="">초대 링크 복사</button>
-  <button class="btn primary" id="startBtn" disabled="">준비 완료</button>
+  <button class="btn" id="copyInvite" disabled>초대 링크 복사</button>
+  <button class="btn primary" id="startBtn" disabled>준비 완료</button>
   <details class="server-settings"><summary>서버 설정</summary><label class="field">서버 주소 <input type="url" id="serverUrl" value="https://dual-stack-online.tema-tetris.workers.dev" spellcheck="false"></label></details>
  </div>
  <div class="online-status"><span id="netStatus">방을 만들거나 코드로 참가해</span><strong id="roomDisplay"></strong></div>
 </section>
-<section id="practicePanel" class="practice-panel" hidden="">
- <div class="practice-grid"><button class="btn primary" id="soloStart">연습 시작</button><button class="btn" id="soloPause" disabled="">일시정지</button><span id="soloStatus" class="practice-status">오프라인 연습</span><span id="restartHold" title="자유 연습: R 길게 누르기"><span id="restartFill"></span></span></div><div id="challengeMetrics" class="challenge-metrics" hidden=""></div>
+<section id="practicePanel" class="practice-panel" hidden>
+ <div class="practice-grid"><button class="btn primary" id="soloStart">연습 시작</button><button class="btn" id="soloPause" disabled>일시정지</button><span id="soloStatus" class="practice-status">오프라인 연습</span><span id="restartHold" title="자유 연습: R 길게 누르기"><span id="restartFill"></span></span></div><div id="challengeMetrics" class="challenge-metrics" hidden></div>
 </section>
 <div id="match" class="match">
- <div class="team"><span class="dot"></span><strong>YOU</strong><div class="points" id="score1"><span class="point "></span><span class="point "></span><span class="point "></span></div></div>
+ <div class="team"><span class="dot"></span><strong>YOU</strong><div class="points" id="score1"></div></div>
  <div class="middle"><div class="mode" id="middleMode">FIRST TO 3</div><div class="clock" id="clock">00:00</div><div class="round" id="roundText">ROUND 1</div></div>
- <div class="team right"><span class="dot"></span><strong>OPPONENT</strong><div class="points" id="score2"><span class="point "></span><span class="point "></span><span class="point "></span></div></div>
+ <div class="team right"><span class="dot"></span><strong>OPPONENT</strong><div class="points" id="score2"></div></div>
 </div>
 <div class="arena">
  <section class="player one"><div class="player-head"><span class="name p1">YOU</span><span class="pill">01</span></div>
   <div class="station">
    <div class="side"><div class="sidetitle">HOLD</div><canvas class="preview" id="hold0" width="132" height="112"></canvas><div class="sidetitle" style="margin-top:12px">ATTACK</div><div class="side-number" id="attack0">0</div><div class="sidetitle" style="margin-top:10px">GARBAGE</div><div class="side-number" id="incoming0">0</div><div class="surge" id="surge0"></div></div>
-   <div class="board-wrap"><canvas class="board" id="board0" width="300" height="600"></canvas><div class="garbage-bar"><div class="garbage-fill" id="garbage0" style="height: 0%;"></div></div><div class="board-overlay show" id="overlay0"><div class="huge">ONLINE</div><div class="hint">방을 만들거나 참가해</div></div></div>
-   <div class="side"><div class="sidetitle">NEXT</div><div id="next0"><canvas width="132" height="95" class="preview next-preview"></canvas><canvas width="132" height="95" class="preview next-preview"></canvas><canvas width="132" height="95" class="preview next-preview"></canvas><canvas width="132" height="95" class="preview next-preview"></canvas><canvas width="132" height="95" class="preview next-preview"></canvas></div></div>
-  </div><div class="event" id="event0" data-display=""></div><div class="smallstat"><div><b id="lines0">0</b><span>LINES</span></div><div><b id="pps0">0.00</b><span>PPS</span></div><div><b id="apm0">0</b><span>APM</span></div><div><b id="b2b0">0</b><span>B2B</span></div></div>
+   <div class="board-wrap"><canvas class="board" id="board0" width="300" height="600"></canvas><div class="garbage-bar"><div class="garbage-fill" id="garbage0"></div></div><div class="board-overlay show" id="overlay0"><div class="huge">ONLINE</div><div class="hint">방을 만들거나 참가해</div></div></div>
+   <div class="side"><div class="sidetitle">NEXT</div><div id="next0"></div></div>
+  </div><div class="event" id="event0"></div><div class="smallstat"><div><b id="lines0">0</b><span>LINES</span></div><div><b id="pps0">0.00</b><span>PPS</span></div><div><b id="apm0">0</b><span>APM</span></div><div><b id="b2b0">0</b><span>B2B</span></div></div>
  </section>
  <div class="versus"><div class="vsmark">VS</div><div class="feed" id="feed"></div></div>
  <section class="player two"><div class="player-head"><span class="name p2">OPPONENT</span><span class="pill">02</span></div>
   <div class="station">
    <div class="side"><div class="sidetitle">HOLD</div><canvas class="preview" id="hold1" width="132" height="112"></canvas><div class="sidetitle" style="margin-top:12px">ATTACK</div><div class="side-number" id="attack1">0</div><div class="sidetitle" style="margin-top:10px">GARBAGE</div><div class="side-number" id="incoming1">0</div><div class="surge" id="surge1"></div></div>
-   <div class="board-wrap"><canvas class="board" id="board1" width="300" height="600"></canvas><div class="garbage-bar"><div class="garbage-fill" id="garbage1" style="height: 0%;"></div></div><div class="board-overlay show" id="overlay1"><div class="huge">WAITING</div><div class="hint">상대 플레이어</div></div></div>
-   <div class="side"><div class="sidetitle">NEXT</div><div id="next1"><canvas width="132" height="95" class="preview next-preview"></canvas><canvas width="132" height="95" class="preview next-preview"></canvas><canvas width="132" height="95" class="preview next-preview"></canvas><canvas width="132" height="95" class="preview next-preview"></canvas><canvas width="132" height="95" class="preview next-preview"></canvas></div></div>
-  </div><div class="event" id="event1" data-display=""></div><div class="smallstat"><div><b id="lines1">0</b><span>LINES</span></div><div><b id="pps1">0.00</b><span>PPS</span></div><div><b id="apm1">0</b><span>APM</span></div><div><b id="b2b1">0</b><span>B2B</span></div></div>
+   <div class="board-wrap"><canvas class="board" id="board1" width="300" height="600"></canvas><div class="garbage-bar"><div class="garbage-fill" id="garbage1"></div></div><div class="board-overlay show" id="overlay1"><div class="huge">WAITING</div><div class="hint">상대 플레이어</div></div></div>
+   <div class="side"><div class="sidetitle">NEXT</div><div id="next1"></div></div>
+  </div><div class="event" id="event1"></div><div class="smallstat"><div><b id="lines1">0</b><span>LINES</span></div><div><b id="pps1">0.00</b><span>PPS</span></div><div><b id="apm1">0</b><span>APM</span></div><div><b id="b2b1">0</b><span>B2B</span></div></div>
  </section>
 </div>
-<div class="bottom"><button class="btn" type="button" id="replayOpen" disabled="">▶ 마지막 리플레이</button>
+<div class="bottom">
  <details class="help"><summary>조작키</summary><div class="details-body">
   <div class="keyrow"><span>이동</span><div class="keycaps"><span class="keycap">←</span><span class="keycap">→</span></div></div>
   <div class="keyrow"><span>소프트 드롭</span><div class="keycaps"><span class="keycap">↓</span></div></div>
@@ -375,9 +303,9 @@ body.touch-mode{overscroll-behavior-y:contain}
   <div class="keyrow"><span>홀드</span><div class="keycaps"><span class="keycap">C</span><span class="keycap">Shift</span></div></div><div class="keyrow"><span>자유 연습</span><div class="keycaps"><span class="keycap">R 길게</span><span class="keycap">Ctrl+Z</span></div></div><div class="keyrow"><span>40 LINES / BLITZ</span><div class="keycaps"><span class="keycap">R 재시작</span></div></div>
  </div></details>
  <details class="options" id="config"><summary>감도 설정</summary><div class="details-body"><div class="settings-controls">
-  <label class="setting">DAS <strong id="dasVal">6.5F · 108ms</strong><input id="das" type="range" min="0" max="20" step="0.5" value="6.5"><span class="setting-explain">좌우 반복 시작 지연</span></label>
-  <label class="setting">ARR <strong id="arrVal">1F · 17ms</strong><input id="arr" type="range" min="0" max="10" step="0.5" value="1"><span class="setting-explain">좌우 반복 간격</span></label>
-  <label class="setting">DCD <strong id="dcdVal">0F · 0ms</strong><input id="dcd" type="range" min="0" max="12" step="1" value="0"><span class="setting-explain">회전·등장 후 지연</span></label>
+  <label class="setting">DAS <strong id="dasVal">6.5F</strong><input id="das" type="range" min="0" max="20" step="0.5" value="6.5"><span class="setting-explain">좌우 반복 시작 지연</span></label>
+  <label class="setting">ARR <strong id="arrVal">1F</strong><input id="arr" type="range" min="0" max="10" step="0.5" value="1"><span class="setting-explain">좌우 반복 간격</span></label>
+  <label class="setting">DCD <strong id="dcdVal">0F</strong><input id="dcd" type="range" min="0" max="12" step="1" value="0"><span class="setting-explain">회전·등장 후 지연</span></label>
   <label class="setting">SDF <strong id="sdfVal">20×</strong><input id="sdf" type="range" min="1" max="41" step="1" value="20"><span class="setting-explain">소프트 드롭 배율 · 끝 = ∞</span></label>
   <label class="setting">타격감 <strong id="fxVal">강함</strong><input id="fx" type="range" min="0" max="3" step="1" value="3"><span class="setting-explain">0 끔 · 1 약함 · 2 보통 · 3 강함</span></label>
   <label class="setting">효과음 <strong id="volumeVal">70%</strong><input id="volume" type="range" min="0" max="100" step="5" value="70"><span class="setting-explain">효과음 음량</span></label>
@@ -385,44 +313,19 @@ body.touch-mode{overscroll-behavior-y:contain}
  </div></details>
 
  <details class="controlbind" id="keySettings"><summary>키 설정</summary><div class="details-body">
-  <div class="bind-grid" id="keyBindGrid"><div class="bind-row"><span>왼쪽</span><button type="button" class="bind-key">ArrowLeft</button></div><div class="bind-row"><span>오른쪽</span><button type="button" class="bind-key">ArrowRight</button></div><div class="bind-row"><span>소프트 드롭</span><button type="button" class="bind-key">ArrowDown</button></div><div class="bind-row"><span>하드 드롭</span><button type="button" class="bind-key">Space</button></div><div class="bind-row"><span>반시계 회전</span><button type="button" class="bind-key">Z</button></div><div class="bind-row"><span>시계 회전</span><button type="button" class="bind-key">X</button></div><div class="bind-row"><span>180° 회전</span><button type="button" class="bind-key">A</button></div><div class="bind-row"><span>홀드</span><button type="button" class="bind-key">C</button></div></div><p id="bindNotice" class="bind-note">버튼을 누르고 원하는 키를 눌러. Esc로 취소.</p><button class="btn" type="button" id="resetKeys">키 초기화</button>
+  <div class="bind-grid" id="keyBindGrid"></div><p id="bindNotice" class="bind-note">버튼을 누르고 원하는 키를 눌러. Esc로 취소.</p><button class="btn" type="button" id="resetKeys">키 초기화</button>
  </div></details>
  <details class="recordspanel" id="recordsPanel"><summary>최고 기록</summary><div class="details-body">
   <div class="record-controls"><label class="field">닉네임 <input id="recordNickname" maxlength="16" placeholder="PLAYER" autocomplete="off"></label><label class="field" style="white-space:nowrap"><input id="shareRecords" type="checkbox"> 온라인 기록 제출</label><button id="refreshRanks" class="btn" type="button">온라인 기록 조회</button></div>
   <p class="record-note">로컬 최고 기록은 자동 저장돼. 온라인 제출은 선택할 때만 서버를 사용해. 온라인 순위는 비공식 기록이야.</p>
-  <div id="localRecords" class="record-note">40 LINES — · PPS — | BLITZ —점 · PC —</div><div id="recordNotice"></div><table class="records-table"><thead><tr><th>#</th><th>이름</th><th>기록</th><th>PC</th></tr></thead><tbody id="rankingRows"><tr><td colspan="4">기록을 조회할 수 있어.</td></tr></tbody></table>
+  <div id="localRecords" class="record-note"></div><div id="recordNotice"></div><table class="records-table"><thead><tr><th>#</th><th>이름</th><th>기록</th><th>PC</th></tr></thead><tbody id="rankingRows"><tr><td colspan="4">기록을 조회할 수 있어.</td></tr></tbody></table>
  </div></details>
  <details class="soundpack" id="soundpackPanel"><summary>효과음 설정</summary><div class="details-body">
-  <div id="soundpackGrid" class="soundpack-grid"><label class="sound-slot"><span>회전</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="회전 효과음 파일"><span class="file-status" id="soundfile_rotate">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="회전 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>홀드</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="홀드 효과음 파일"><span class="file-status" id="soundfile_hold">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="홀드 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>하드 드롭</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="하드 드롭 효과음 파일"><span class="file-status" id="soundfile_harddrop">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="하드 드롭 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>Single</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="Single 효과음 파일"><span class="file-status" id="soundfile_clear1">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="Single 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>Double</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="Double 효과음 파일"><span class="file-status" id="soundfile_clear2">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="Double 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>Triple</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="Triple 효과음 파일"><span class="file-status" id="soundfile_clear3">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="Triple 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>Tetris (4줄)</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="Tetris (4줄) 효과음 파일"><span class="file-status" id="soundfile_clear4">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="Tetris (4줄) 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>T-Spin / 스핀</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="T-Spin / 스핀 효과음 파일"><span class="file-status" id="soundfile_spin">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="T-Spin / 스핀 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>Perfect Clear</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="Perfect Clear 효과음 파일"><span class="file-status" id="soundfile_pc">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="Perfect Clear 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>공격</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="공격 효과음 파일"><span class="file-status" id="soundfile_attack">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="공격 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>가비지</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="가비지 효과음 파일"><span class="file-status" id="soundfile_garbage">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="가비지 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>되돌리기</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="되돌리기 효과음 파일"><span class="file-status" id="soundfile_undo">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="되돌리기 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>연습 재시작</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="연습 재시작 효과음 파일"><span class="file-status" id="soundfile_restart">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="연습 재시작 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>라운드 승리</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="라운드 승리 효과음 파일"><span class="file-status" id="soundfile_victory">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="라운드 승리 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>최종 승리</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="최종 승리 효과음 파일"><span class="file-status" id="soundfile_matchwin">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="최종 승리 미리듣기">▶ 미리듣기</button></label><label class="sound-slot"><span>패배</span><input type="file" accept="audio/*,.wav,.mp3,.ogg,.opus,.m4a,.flac" aria-label="패배 효과음 파일"><span class="file-status" id="soundfile_defeat">기본 효과음</span><button class="sfx-preview btn" type="button" aria-label="패배 미리듣기">▶ 미리듣기</button></label></div>
+  <div id="soundpackGrid" class="soundpack-grid"></div>
   <div class="soundpack-actions"><span id="soundpackStatus" class="status">사용 가능한 효과음 파일을 직접 지정할 수 있어. 등록한 파일은 이 브라우저에만 저장돼.</span><button type="button" id="soundpackClear" class="btn">파일 초기화</button></div>
  </div></details>
 </div>
 </main>
-<section id="touchControls" class="touch-pad" aria-label="터치 조작" hidden="">
-  <div class="touch-group touch-move">
-    <button class="touch-key" data-act="left" aria-label="왼쪽 이동">◀</button>
-    <button class="touch-key" data-act="soft" aria-label="소프트 드롭">▼</button>
-    <button class="touch-key" data-act="right" aria-label="오른쪽 이동">▶</button>
-  </div>
-  <div class="touch-group touch-actions">
-    <button class="touch-key mini" data-act="hold" aria-label="홀드">HOLD</button>
-    <button class="touch-key" data-act="ccw" aria-label="반시계 회전">↶</button>
-    <button class="touch-key" data-act="cw" aria-label="시계 회전">↷</button>
-    <button class="touch-key mini" data-act="flip" aria-label="180도 회전">180°</button>
-    <button class="touch-key drop" data-act="hard" aria-label="하드 드롭">DROP</button>
-    <button class="touch-key mini" id="touchRestart" aria-label="재시작" hidden="">R</button>
-    <button class="touch-key mini" id="touchUndo" aria-label="연습 되돌리기" hidden="">UNDO</button>
-  </div>
-</section>
-<section id="replayDialog" class="replay-shade" role="dialog" aria-modal="true" aria-label="리플레이" hidden="">
-  <div class="replay-panel">
-    <div class="replay-top"><strong>리플레이 <span id="replayModeLabel"></span></strong><button id="replayClose" class="btn" type="button">닫기 ✕</button></div>
-    <div class="replay-stage"><canvas id="replayCanvas" width="300" height="600" aria-label="저장된 게임판"></canvas><div class="replay-info"><b id="replayTime">00:00.000</b><span id="replayDetails"></span><span id="replayEvent"></span></div></div>
-    <input id="replaySeek" type="range" min="0" max="1000" value="0" aria-label="리플레이 시점">
-    <div class="replay-buttons"><button class="btn primary" id="replayPlay" type="button">▶ 재생</button><label>배속 <select id="replaySpeed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected="">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><button class="btn" id="replayExport" type="button">JSON 저장</button></div>
-    <p class="replay-caption">브라우저에 저장되는 화면 상태 리플레이 · 네트워크 전송 없음</p>
-  </div>
-</section>
 <script>
 (()=>{'use strict';
 const W=10,H=40,V=20,CELL=30,TYPES=['I','J','L','O','S','T','Z'];
@@ -455,19 +358,7 @@ const I_KICKS={
  '3>0':[[0,0],[1,0],[-2,0],[1,-2],[-2,1]],
  '0>3':[[0,0],[-1,0],[2,0],[2,-1],[-1,2]]};
 // 원본의 모든 180도 전이 표를 복제한 것은 아니며 주요 킥을 재현하는 근사 테이블.
-// v2.1: restrict overpermissive universal 180 kick set. T/L/J permit six
-// candidate positions, while symmetric S/Z/I use the 0 or inward kick.
-// Table remains a documented approximation, not an exact TETR.IO reproduction.
-const KICKS180_LJT={
- '0>2':[[0,0],[0,1],[1,1],[-1,1],[1,0],[-1,0]],
- '2>0':[[0,0],[0,-1],[1,-1],[-1,-1],[1,0],[-1,0]],
- '1>3':[[0,0],[1,0],[1,2],[1,1],[0,2],[0,1]],
- '3>1':[[0,0],[-1,0],[-1,2],[-1,1],[0,2],[0,1]]
-};
-const KICKS180_SYM={
- '0>2':[[0,0],[0,1]],'2>0':[[0,0],[0,-1]],
- '1>3':[[0,0],[1,0]],'3>1':[[0,0],[-1,0]]
-};
+const KICKS180=[[0,0],[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1],[2,0],[-2,0],[1,-1],[-1,-1]];
 const KEYMAP=[{
  ArrowLeft:'left',ArrowRight:'right',ArrowDown:'soft',Space:'hard',KeyZ:'ccw',KeyX:'cw',ArrowUp:'cw',KeyA:'flip',KeyC:'hold',ShiftLeft:'hold',ShiftRight:'hold',ControlLeft:'ccw'
 },{KeyJ:'left',KeyL:'right',KeyK:'soft',KeyI:'hard',KeyU:'ccw',KeyO:'cw',KeyP:'flip',KeyH:'hold'}];
@@ -775,7 +666,6 @@ const UNDO_LIMIT=140, R_HOLD_MS=520;let soloUndo=[],rHoldAt=0,rHoldTriggered=fal
 let lastStateSignature='', lastGridDigest='', lastWireSent=Date.now(),reconnectAttempts=0,reconnectTimer=null;
 const networkStats={stateMessages:0,stateBytes:0,totalMessages:0,pings:0};
 const heldKeys=new Set();
-const mobilePointers=new Map();let mobileEnabled=false;
 const urlParams=new URLSearchParams(location.search);
 const generateToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
 const sessionToken=sessionStore.getItem('dualstack_session')||generateToken();
@@ -801,7 +691,7 @@ setInterval(()=>{
   ws.send('ping');lastWireSent=Date.now();networkStats.pings++;
  }
 },15000);
-function resetInputs(){heldKeys.clear();mobilePointers.clear();document.querySelectorAll('.touch-key.active').forEach(b=>b.classList.remove('active'));for(const p of players){p.held={left:false,right:false,soft:false};}}
+function resetInputs(){heldKeys.clear();for(const p of players){p.held={left:false,right:false,soft:false};}}
 async function createRoom(){reconnectAttempts=0;try{workerBase=getBase();statusLine('방 생성 중…');const res=await fetch(workerBase+'/api/create',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:sessionToken})});const data=await res.json();if(!res.ok)throw Error(data.error||'서버 오류');room=data.code;el('roomInput').value=room;persistentStore.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('방 생성 실패: '+e.message);}}
 async function joinRoom(){reconnectAttempts=0;try{workerBase=getBase();room=el('roomInput').value.trim().toUpperCase();if(!/^[0-9]{4}$/.test(room))throw Error('올바른 4자리 숫자 방 코드를 입력해 줘.');statusLine('방 확인 중…');const res=await fetch(workerBase+'/api/check/'+room);const data=await res.json();if(!res.ok)throw Error(data.error||'방 확인 실패');persistentStore.setItem('dualstack_worker',workerBase);history.replaceState(null,'','?room='+room+'&server='+encodeURIComponent(workerBase));connectRoom();}catch(e){statusLine('참가 실패: '+e.message);}}
 function connectRoom(retrying=false){if(ws){try{ws.close(1000,'Changing room');}catch{}}if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}connected=false;readySent=false;presence=[false,false];status='lobby';resetInputs();const endpoint=workerBase.replace(/^http/,'ws')+'/api/ws/'+room+'?token='+encodeURIComponent(sessionToken);const socket=new WebSocket(endpoint);ws=socket;statusLine('서버 연결 중…');updateRoom();socket.addEventListener('open',()=>{if(ws!==socket)return;connected=true;reconnectAttempts=0;lastWireSent=Date.now();statusLine('접속 성공 · 상대를 기다리는 중');updateRoom();});socket.addEventListener('message',e=>{if(ws!==socket)return;if(e.data==='pong')return;let msg;try{msg=JSON.parse(e.data);}catch{return;}onNetwork(msg);});socket.addEventListener('close',e=>{if(ws!==socket)return;connected=false;presence=[false,false];readySent=false;status='lobby';resetInputs();statusLine('연결 종료 ('+e.code+')');if(mode==='online'&&room&&reconnectAttempts<3){reconnectAttempts++;const attempt=reconnectAttempts;statusLine('연결 끊김 · 자동 재접속 '+attempt+'/3');reconnectTimer=setTimeout(()=>{if(!connected&&mode==='online'&&room)connectRoom(true);},1200*attempt);}setOverlay(0,'OFFLINE','서버와 연결이 종료됐어');setOverlay(1,'OFFLINE','상대 연결 끊김');updateRoom();});socket.addEventListener('error',()=>{if(ws===socket)statusLine('연결 오류 · Workers 서버 주소를 확인해 줘.');});}
@@ -850,7 +740,7 @@ function onNetwork(msg){
    addFeed('<strong>OPP</strong> ATTACK +'+msg.lines);
  }
  if(msg.type==='roundEnd'){
-   finishCapture('라운드 종료');status='over';resetInputs();readySent=false;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;
+   status='over';resetInputs();readySent=false;wins=[msg.wins[seat]||0,msg.wins[1-seat]||0];round=msg.round;
    const mine=msg.winner===seat;
    impactSound(mine?(msg.matchOver?'matchwin':'victory'):'defeat');
    setOverlay(0,mine?'WIN':'TOP OUT',mine?'라운드 승리':'패배',true,mine?'win':'loss');
@@ -861,7 +751,7 @@ function onNetwork(msg){
  if(msg.type==='proofRejected'){statusLine('공격 검증 거절: '+String(msg.reason||'배치 오류').slice(0,60));}
  if(msg.type==='interrupted'){status='lobby';readySent=false;resetInputs();wins=[0,0];round=1;updateScore();setOverlay(0,'CANCELLED','상대 연결 종료');setOverlay(1,'OFFLINE','다른 플레이어를 기다려 줘.');statusLine(msg.message||'연결 종료');updateRoom();}
 }
-function startPlaying(now){status='running';roundStart=now;startCapture();hideOverlay(0);hideOverlay(1);el('roundText').textContent='ROUND '+round+' · PLAYING';statusLine('대전 중 · 내 보드를 조작해 줘.');updateRoom();sendSnapshot();}
+function startPlaying(now){status='running';roundStart=now;hideOverlay(0);hideOverlay(1);el('roundText').textContent='ROUND '+round+' · PLAYING';statusLine('대전 중 · 내 보드를 조작해 줘.');updateRoom();sendSnapshot();}
 function sendSnapshot(){
  if(status!=='running')return;
  const p=players[0],t=p.piece;
@@ -932,8 +822,7 @@ function updateChallengeHud(){
  items.forEach(([,value],i)=>{const n=info.children[i].querySelector('b');if(n.textContent!==String(value))n.textContent=value;});
 }
 function chooseMode(next){
- if(mode===next)return;
- finishCapture('모드 전환');if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}reconnectAttempts=3;
+ if(mode===next)return;if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null;}reconnectAttempts=3;
  if(ws){const old=ws;ws=null;try{old.close(1000,'Mode changed');}catch{}}
  mode=next;recordRunCounter++;recordTicket=null;onlineRecordReady=false;connected=false;readySent=false;room='';seat=-1;presence=[false,false];soloUndo=[];resetRestartHold();
  status=isOffline()?'soloIdle':'lobby';wins=[0,0];round=1;clockTime=0;feed=[];challengeResult='';
@@ -949,7 +838,7 @@ function chooseMode(next){
  el('middleMode').textContent=next==='solo'?'PRACTICE':next==='sprint'?'SPRINT':next==='blitz'?'120 SEC':'FIRST TO 3';
  el('soloStart').textContent=next==='solo'?'연습 시작':isChallenge()?'시작':'연습 시작';
  el('soloPause').textContent='일시정지';el('soloPause').disabled=true;
- el('restartHold').hidden=next!=='solo';el('touchUndo').hidden=next!=='solo';el('touchRestart').hidden=next==='online';
+ el('restartHold').hidden=next!=='solo';
  el('apm0').nextElementSibling.textContent=isChallenge()?'PIECES':'APM';
  if(isOffline()){
    const title=next==='solo'?'PRACTICE':next==='sprint'?'40 LINES':'BLITZ';
@@ -961,7 +850,6 @@ function chooseMode(next){
 }
 function startChallenge(){
  if(!isChallenge())return;
- finishCapture('재시작');
  soloUndo=[];challengeResult='';status='challengeCountdown';players=[newPlayer(0),newPlayer(1)];resetInputs();
  // STRIDE: prevent S/Z/O on the initial piece while retaining a real 7-bag.
  do{players[0].queue=[];queueFill(players[0]);}while(['S','Z','O'].includes(players[0].queue[0]));
@@ -974,7 +862,6 @@ function startChallenge(){
 }
 function finishChallenge(reason,now=performance.now()){
  if(!isChallenge()||!['running','challengeCountdown'].includes(status))return;
- finishCapture(reason);
  const p=players[0];
  if(reason==='complete'&&mode==='sprint')clockTime=Math.max(0,now-roundStart);
  if(reason==='timeout'&&mode==='blitz')clockTime=BLITZ_DURATION_MS;
@@ -990,10 +877,9 @@ function finishChallenge(reason,now=performance.now()){
 }
 function startSolo(){
  if(mode!=='solo')chooseMode('solo');
- finishCapture('재시작');
  soloUndo=[];status='running';players=[newPlayer(0),newPlayer(1)];queueFill(players[0]);resetInputs();
  roundStart=performance.now();clockTime=0;feed=[];el('feed').textContent='';
- spawn(players[0]);soloCheckpoint();startCapture();renderMini(players[0]);renderMini(players[1]);hideOverlay(0);
+ spawn(players[0]);soloCheckpoint();renderMini(players[0]);renderMini(players[1]);hideOverlay(0);
  el('roundText').textContent='연습 중';el('soloStatus').textContent='연습 중';
  el('soloStart').textContent='다시 시작';el('soloPause').disabled=false;el('soloPause').textContent='일시정지';
 }
@@ -1022,8 +908,8 @@ function act(p,kind,now){if(status!=='running'||p.dead||!p.piece)return;const t=
 function touch(p,now){const t=p.piece;if(!t)return;if(!valid(p,t.m,t.x,t.y+1)){if(!p.groundAt)p.groundAt=now;else if(p.lockResets<15){p.groundAt=now;p.lockResets++;}}else p.groundAt=0;}
 function move(p,dx,dy,now){const t=p.piece;if(!t||!valid(p,t.m,t.x+dx,t.y+dy))return false;t.x+=dx;t.y+=dy;t.lastRotate=false;if(dy>0) p.moved++;touch(p,now);return true;}
 function sonicDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}if(count){p.piece.lastRotate=false;p.moved+=count;if(mode==='blitz'){p.softDropCells+=count;p.blitzScore+=count;}}touch(p,now);}
-function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.kickIndex=0;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;impactSound('rotate');return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
-const tbl=dir===2?((['T','L','J'].includes(t.type)?KICKS180_LJT:KICKS180_SYM)[`${t.rot}>${nr}`]||[[0,0]]):(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);impactSound('rotate');return;}}}
+function turn(p,dir,now){const t=p.piece;if(!t)return;const nr=(t.rot+(dir===2?2:dir+4))%4;if(t.type==='O'){t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;p.dcdUntil=now+config.dcd;impactSound('rotate');return;}const mat=rotateMat(t.m,dir===-1?-1:dir);
+const tbl=dir===2?KICKS180:(t.type==='I'?I_KICKS:JL_KICKS)[`${t.rot}>${nr}`];for(let k=0;k<tbl.length;k++){const [dx,dy]=tbl[k];if(valid(p,mat,t.x+dx,t.y-dy)){t.m=mat;t.x+=dx;t.y-=dy;t.rot=nr;t.lastRotate=true;t.lastTurnDir=dir;t.kickIndex=k;p.dcdUntil=now+config.dcd;touch(p,now);impactSound('rotate');return;}}}
 function doHold(p){if(!p.piece||p.holdUsed)return;const current=p.piece.type;const old=p.hold;p.hold=current;p.piece=null;spawn(p,old);p.holdUsed=true;impactSound('hold');renderMini(p);}
 function hardDrop(p,now){if(!p.piece)return;let count=0;while(valid(p,p.piece.m,p.piece.x,p.piece.y+1)){p.piece.y++;count++;}
  const t=p.piece;const blocks=[];for(let r=0;r<t.m.length;r++)for(let c=0;c<t.m[r].length;c++)if(t.m[r][c])blocks.push([(t.x+c+.5)*CELL,(t.y+r-(H-V)+.5)*CELL]);
@@ -1091,7 +977,7 @@ const pending=p.incoming.reduce((s,a)=>s+a.lines,0);const doubleDefense=p.pieces
 for(const pkt of p.incoming){if(rest<=0)break;const cap=rest*(doubleDefense?2:1),used=Math.min(cap,pkt.lines);pkt.lines-=used;blocked+=used;rest-=doubleDefense?Math.ceil(used/2):used;}
 p.incoming=p.incoming.filter(pkt=>pkt.lines>0);p.blocked+=blocked;
 if(rest<=0){addFeed('<strong>ME</strong> DEFENSE −'+blocked);return;}
-const transmitted=Math.min(20,Math.floor(rest));if(send('attack',{lines:transmitted})){p.sent+=transmitted;addFeed('<strong>ME</strong> ATTACK +'+transmitted+(blocked?' · CANCEL '+blocked:''));}else{addFeed('<strong>ME</strong> ATTACK 전송 실패');}if(!isPC){addEffect(p,'attack',now,{power:Math.min(rest,12)});impactSound('attack',Math.min(rest,12));}
+p.sent+=rest;send('attack',{lines:Math.min(20,rest)});addFeed('<strong>ME</strong> ATTACK +'+rest+(blocked?' · CANCEL '+blocked:''));if(!isPC){addEffect(p,'attack',now,{power:Math.min(rest,12)});impactSound('attack',Math.min(rest,12));}
 }
 function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=8)break;if(now<pkt.active)continue;const count=Math.min(pkt.lines,8-added);for(let j=0;j<count;j++){
  if(p.grid[0].some(Boolean)){p.dead=true;roundEnd(p.i);return;}
@@ -1101,7 +987,7 @@ function applyGarbage(p,now){let added=0;for(const pkt of p.incoming){if(added>=
  }pkt.lines-=count;}
 p.incoming=p.incoming.filter(pkt=>pkt.lines>0);if(added){p.event='GARBAGE +'+added;p.sub='상대 공격이 들어왔어';p.eventUntil=now+900;p.glow=now+180;addEffect(p,'garbage',now,{power:added});impactSound('garbage');}
 }
-function roundEnd(loser){if(status!=='running'||loser!==0)return;finishCapture('탑아웃');resetInputs();if(isChallenge()){finishChallenge('topout');return;}if(mode==='solo'){status='soloOver';impactSound('defeat');setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
+function roundEnd(loser){if(status!=='running'||loser!==0)return;resetInputs();if(isChallenge()){finishChallenge('topout');return;}if(mode==='solo'){status='soloOver';impactSound('defeat');setOverlay(0,'GAME OVER','다시 시작할 수 있어');el('roundText').textContent='연습 종료';el('soloStart').textContent='다시 시작';el('soloPause').disabled=true;el('soloStatus').textContent='연습 종료';return;}status='ending';send('topout');setOverlay(0,'TOP OUT','결과 확인 중');setOverlay(1,'WAIT','상대에게 결과 전송 중');}
 function updateRepeat(p,direction,now){const v=p.repeat[direction];if(!p.held[direction])return;if(now-v.at<config.das||now<p.dcdUntil)return;if(config.arr===0){while(move(p,direction==='left'?-1:1,0,now)){}v.done=true;return;}if(!v.done){move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=now;return;}if(now-v.last<config.arr)return;let count=0;while(now-v.last>=config.arr&&count++<20){const moved=move(p,direction==='left'?-1:1,0,now);v.done=true;v.last=v.last+config.arr||now;if(!moved)break;}}
 // Fixed-step physics. Tick timestamps are derived from the CURRENT frame clock,
 // never from a separately accumulated clock that can drift behind performance.now().
@@ -1112,7 +998,7 @@ function stepPhysics(now,dt){
  const p=players[0];if(!p.dead&&p.piece){
   const left=p.held.left,right=p.held.right;
   if(left&&right){if(p.repeat.left.at>p.repeat.right.at)updateRepeat(p,'left',now);else updateRepeat(p,'right',now);}else if(left)updateRepeat(p,'left',now);else if(right)updateRepeat(p,'right',now);
-  if(p.piece&&status==='running'){const naturalG=mode==='blitz'?Math.min(1200,1/BLITZ_ROW_SECONDS[Math.min(14,blitzLevel(p.lines)-1)]):mode==='sprint'?1:1/0.8;const g=p.held.soft&&config.sdf!==41?Math.max(naturalG,config.sdf*1.25):naturalG;p.gravity+=dt*g;let drops=0;
+  if(p.piece&&status==='running'){const naturalG=mode==='blitz'?Math.min(1200,1/BLITZ_ROW_SECONDS[Math.min(14,blitzLevel(p.lines)-1)]):mode==='sprint'?1:1/0.8;const g=p.held.soft&&config.sdf!==41?Math.max(naturalG,Math.max(1,naturalG)*config.sdf):naturalG;p.gravity+=dt*g;let drops=0;
    while(p.gravity>=1&&drops<40){p.gravity--;if(move(p,0,1,now)){drops++;if(mode==='blitz'&&p.held.soft){p.blitzScore++;p.softDropCells++;}}else{p.gravity=0;break;}}
    if(p.piece){if(!valid(p,p.piece.m,p.piece.x,p.piece.y+1)){if(!p.groundAt)p.groundAt=now;if(now-p.groundAt>=500||p.lockResets>=15)lock(p,now);}else p.groundAt=0;}
   }
@@ -1127,7 +1013,7 @@ if(status==='countdown'){
 if(status==='challengeCountdown'){
  const delta=now-challengeCountdownAt;const stage=delta<300?'READY':delta<600?'SET':'GO';
  if(el('overlay0').querySelector('.huge').textContent!==stage)setOverlay(0,stage,'');
- if(delta>=600){status='running';roundStart=now;clockTime=0;startCapture();challengeGoUntil=now+150;el('soloStatus').textContent=mode==='sprint'?'40 LINES 진행 중':'BLITZ 진행 중';}
+ if(delta>=600){status='running';roundStart=now;clockTime=0;challengeGoUntil=now+150;el('soloStatus').textContent=mode==='sprint'?'40 LINES 진행 중':'BLITZ 진행 중';}
 }
 if(status==='running'){
  clockTime=now-roundStart;
@@ -1147,52 +1033,18 @@ if(status==='running'){
  }
  if(stepsTaken>=15)physDebt=0;
  if(now-lastSnapshot>=150){lastSnapshot=now;sendSnapshot();}
- captureFrame(now);
  if(isChallenge())updateChallengeHud();
 }
 if(status!=='running'){physPrev=0;physDebt=0;}
 loop.prev=now;
 for(const p of players){renderBoard(p,now);renderHud(p,now);}
 }
-function handleDown(e){if(!el('replayDialog').hidden){if(e.code==='Escape')closeReplay();return;}if(e.target?.matches?.('input,textarea,select,[contenteditable]'))return;const code=e.code;
+function handleDown(e){if(e.target?.matches?.('input,textarea,[contenteditable]'))return;const code=e.code;
 if(mode==='solo'&&(e.ctrlKey||e.metaKey)&&code==='KeyZ'){e.preventDefault();if(!e.repeat)undoSolo();return;}
 if(mode==='solo'&&code==='KeyR'){e.preventDefault();if(!rHoldAt&&!e.repeat){rHoldAt=performance.now();rHoldTriggered=false;}return;}
 if(isChallenge()&&code==='KeyR'){e.preventDefault();if(!e.repeat)startChallenge();return;}
 if(!KEYMAP[0][code])return;e.preventDefault();if(e.repeat||heldKeys.has(code))return;heldKeys.add(code);if(status!=='running')return;const action=KEYMAP[0][code],p=players[0],now=performance.now();if(['left','right','soft'].includes(action)){if(action==='soft'){p.held.soft=true;act(p,'soft',now);}else{p.held[action]=true;p.repeat[action]={at:now,last:now,done:false};act(p,action,now);}}else act(p,action,now);}
 function handleUp(e){if(e.code==='KeyR'){resetRestartHold();return;}heldKeys.delete(e.code);const action=KEYMAP[0][e.code];if(action&&['left','right','soft'].includes(action))players[0].held[action]=false;}
-// Mobile pad: opt-in, direct actions without simulated KeyboardEvents.
-const mobilePad=el('touchControls'),mobileToggle=el('mobileToggle');
-function setMobileMode(on){mobileEnabled=!!on;resetInputs();mobilePad.hidden=!mobileEnabled;document.body.classList.toggle('touch-mode',mobileEnabled);
- mobileToggle.textContent='모바일 '+(mobileEnabled?'ON':'OFF');mobileToggle.setAttribute('aria-pressed',String(mobileEnabled));
- el('touchUndo').hidden=mode!=='solo';el('touchRestart').hidden=mode==='online';}
-mobileToggle.addEventListener('click',()=>setMobileMode(!mobileEnabled));
-function beginMobilePointer(ev){if(!mobileEnabled||!ev.isPrimary&&ev.pointerType==='mouse')return;
- const b=ev.currentTarget;ev.preventDefault();const action=b.dataset.act;
- if(mobilePointers.has(ev.pointerId)||!action||status!=='running')return;
- mobilePointers.set(ev.pointerId,action);b.classList.add('active');try{b.setPointerCapture(ev.pointerId)}catch{}
- const now=performance.now(),p=players[0];
- if(action==='left'||action==='right'){p.held[action]=true;p.repeat[action]={at:now,last:now,done:false};act(p,action,now);}
- else if(action==='soft'){p.held.soft=true;act(p,'soft',now);}
- else act(p,action,now);
-}
-function endMobilePointer(ev){const b=ev.currentTarget,action=mobilePointers.get(ev.pointerId);
- if(action===undefined)return;ev.preventDefault();mobilePointers.delete(ev.pointerId);b.classList.remove('active');
- if(['left','right','soft'].includes(action))players[0].held[action]=[...mobilePointers.values()].includes(action)||[...heldKeys].some(k=>KEYMAP[0][k]===action);
-}
-mobilePad.querySelectorAll('[data-act]').forEach(b=>{
- b.addEventListener('pointerdown',beginMobilePointer);b.addEventListener('pointerup',endMobilePointer);
- b.addEventListener('pointercancel',endMobilePointer);b.addEventListener('lostpointercapture',endMobilePointer);
- b.addEventListener('contextmenu',e=>e.preventDefault());
-});
-const touchRestart=el('touchRestart');let mobileRestartTimer=null;
-touchRestart.addEventListener('pointerdown',ev=>{ev.preventDefault();if(mode==='online')return;
- touchRestart.classList.add('active');try{touchRestart.setPointerCapture(ev.pointerId)}catch{}
- if(isChallenge())startChallenge();else if(mode==='solo'){mobileRestartTimer=setTimeout(()=>{mobileRestartTimer=null;startSolo();},520);}
-});
-function endRestart(){touchRestart.classList.remove('active');if(mobileRestartTimer){clearTimeout(mobileRestartTimer);mobileRestartTimer=null;}}
-['pointerup','pointercancel','lostpointercapture'].forEach(t=>touchRestart.addEventListener(t,endRestart));
-el('touchUndo').addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='solo')undoSolo();});
-setMobileMode(false);
 window.addEventListener('keydown',handleDown);window.addEventListener('keyup',handleUp);window.addEventListener('blur',()=>{resetInputs();resetRestartHold();});document.addEventListener('visibilitychange',()=>{if(document.hidden){resetInputs();resetRestartHold();}});
 
 function rectRound(ctx,x,y,w,h,r=3){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
@@ -1310,98 +1162,7 @@ if(evt.dataset.display!==eventKey){evt.dataset.display=eventKey;evt.classList.to
  if(active){const s=document.createElement('span');s.className='sub';s.textContent=p.sub;evt.appendChild(s);}}
 
 }
-
-// Snapshot-based local replay. Playback NEVER mutates players or sends any message.
-const REPLAY_STORAGE='tetrisduel_v21_last_replay';
-let replayCapture=null,replayLast=null,replayActive=false,replayPlaying=false,replayPos=0,replayUpdatedAt=0;
-try{const stored=JSON.parse(persistentStore.getItem(REPLAY_STORAGE)||'null');
- if(stored&&Array.isArray(stored.frames)&&stored.frames.length>0&&stored.frames.length<=6000&&stored.version===1)replayLast=stored;
-}catch{}
-function updateReplayButton(){el('replayOpen').disabled=!replayLast;}
-function startCapture(){
- replayCapture={version:1,mode,startedAt:performance.now(),frames:[],lastGrid:'',lastSig:'',lastTime:-Infinity};
- captureFrame(performance.now(),true);
-}
-function captureFrame(now,force=false){
- const rec=replayCapture;if(!rec||status!=='running'||rec.frames.length>=6000)return;
- const p=players[0],piece=p.piece;
- const state={p:piece?[piece.type,piece.rot,piece.x,piece.y]:null,h:p.hold||'',q:p.queue.slice(0,5).join(''),l:p.lines,n:p.pieces,pc:p.perfectClears,
-  sc:p.blitzScore,a:p.sent,e:p.eventUntil>now?p.event:'',b:p.b2b};
- const sig=JSON.stringify(state),g=p.grid.slice(H-V).map(row=>row.map(c=>c||'.').join('')).join('');
- const changed=sig!==rec.lastSig||g!==rec.lastGrid;
- if(!force&&!changed&&now-rec.lastTime<150)return;
- if(!force&&now-rec.lastTime<35&&rec.frames.length)return;
- const frame={t:Math.round(Math.max(0,now-rec.startedAt)),...state};
- if(g!==rec.lastGrid)frame.g=g;
- rec.frames.push(frame);rec.lastSig=sig;rec.lastGrid=g;rec.lastTime=now;
-}
-function finishCapture(reason){
- if(!replayCapture)return;
- captureFrame(performance.now(),true);
- const rec=replayCapture;replayCapture=null;
- if(!rec.frames.length)return;
- replayLast={version:1,mode:rec.mode,reason,recorded:new Date().toISOString(),duration:rec.frames.at(-1).t,frames:rec.frames};
- // Keep the last match available without filling the free browser quota.
- try{const data=JSON.stringify(replayLast);if(data.length<2100000)persistentStore.setItem(REPLAY_STORAGE,data);}catch{}
- updateReplayButton();
-}
-function canOpenReplay(){return !['running','countdown','challengeCountdown','ending'].includes(status)}
-const replayCanvas=el('replayCanvas'),replayCtx=replayCanvas.getContext('2d');
-function frameAt(ms){const a=replayLast?.frames||[];let lo=0,hi=a.length-1;
- while(lo<hi){const mid=(lo+hi+1)>>1;if(a[mid].t<=ms)lo=mid;else hi=mid-1;}
- return lo;
-}
-function drawReplay(ms){if(!replayLast?.frames?.length)return;
- const frames=replayLast.frames,index=frameAt(ms),f=frames[index],ctx=replayCtx;
- let grid='';for(let j=index;j>=0;j--)if(typeof frames[j].g==='string'&&frames[j].g.length===200){grid=frames[j].g;break;}
- ctx.clearRect(0,0,300,600);ctx.fillStyle='#0a1121';ctx.fillRect(0,0,300,600);
- ctx.strokeStyle='#1b293e';ctx.lineWidth=.6;
- for(let x=1;x<W;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,600);ctx.stroke();}
- for(let y=1;y<V;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(300,y*CELL);ctx.stroke();}
- if(grid)for(let y=0;y<20;y++)for(let x=0;x<10;x++){const c=grid[y*10+x];if(c&&c!=='.')tile(ctx,x*CELL,y*CELL,CELL,c);}
- if(f.p){const [type,rot,px,py]=f.p;let m=PIECES[type]?.map(r=>r.slice());
-  if(m){for(let r=0;r<rot;r++)m=rotateMat(m,1);
-   for(let r=0;r<m.length;r++)for(let c=0;c<m[r].length;c++)if(m[r][c]){
-    const y=(py+r-(H-V))*CELL;if(y>=0&&y<600)tile(ctx,(px+c)*CELL,y,CELL,type);
-   }
-  }
- }
- el('replayTime').textContent=clockText(ms);
- el('replayDetails').textContent=`LINES ${f.l} · PIECES ${f.n} · PC ${f.pc} · SCORE ${f.sc}`;
- el('replayEvent').textContent=f.e||'';
- el('replaySeek').value=replayLast.duration?Math.min(1000,Math.round(ms/replayLast.duration*1000)):0;
-}
-function showReplay(){if(!replayLast||!canOpenReplay())return;
- replayActive=true;replayPlaying=false;replayPos=0;replayUpdatedAt=0;
- el('replayDialog').hidden=false;
- el('replayModeLabel').textContent='· '+({solo:'자유 연습',sprint:'40 LINES',blitz:'BLITZ',online:'ONLINE'}[replayLast.mode]||replayLast.mode);
- el('replayPlay').textContent='▶ 재생';drawReplay(0);
-}
-function closeReplay(){replayActive=false;replayPlaying=false;el('replayDialog').hidden=true;}
-el('replayOpen').addEventListener('click',showReplay);
-el('replayClose').addEventListener('click',closeReplay);
-el('replayDialog').addEventListener('pointerdown',e=>{if(e.target===el('replayDialog'))closeReplay();});
-el('replayPlay').addEventListener('click',()=>{
- if(!replayActive)return;
- if(replayPos>=replayLast.duration)replayPos=0;
- replayPlaying=!replayPlaying;replayUpdatedAt=performance.now();el('replayPlay').textContent=replayPlaying?'Ⅱ 일시정지':'▶ 재생';if(replayPlaying)requestAnimationFrame(replayLoop);
-});
-el('replaySeek').addEventListener('input',e=>{if(!replayLast)return;replayPos=replayLast.duration*Number(e.target.value)/1000;replayUpdatedAt=performance.now();drawReplay(replayPos);});
-el('replayExport').addEventListener('click',()=>{
- if(!replayLast)return;
- const blob=new Blob([JSON.stringify(replayLast)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download='TetrisDuel-replay-'+replayLast.mode+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-});
-function replayLoop(now){if(replayActive&&replayPlaying){if(replayUpdatedAt){replayPos+=Math.min(100,now-replayUpdatedAt)*Number(el('replaySpeed').value);}
- replayUpdatedAt=now;
- if(replayPos>=replayLast.duration){replayPos=replayLast.duration;replayPlaying=false;el('replayPlay').textContent='▶ 재생';}
- drawReplay(replayPos);}
- if(replayActive&&replayPlaying)requestAnimationFrame(replayLoop);
-}
-updateReplayButton();
-
-window.TetrisDuel={version:'2.1-beta',getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},mobileEnabled,replayFrames:replayLast?.frames?.length||0,soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
+window.TetrisDuel={version:'2.0.1-lite',getState:()=>({mode,status,room,seat,connected,wins,round,players:players.map(p=>({lines:p.lines,sent:p.sent,pieces:p.pieces,hold:p.hold,incoming:p.incoming.reduce((a,b)=>a+b.lines,0)})),networkStats:{...networkStats},soloUndoDepth:soloUndo.length,challenge:{result:challengeResult,score:players[0].blitzScore,perfectClears:players[0].perfectClears,level:blitzLevel(players[0].lines),clockTime}}),attackAmount,debugSolo:()=>mode==='solo'?{rng:players[0].rng,queue:[...players[0].queue],grid:players[0].grid.map(x=>x.slice()),hold:players[0].hold,holdUsed:players[0].holdUsed,piece:players[0].piece&&{...players[0].piece},pieces:players[0].pieces}:null};
 updateScore();queueFill(players[0]);renderMini(players[0]);renderMini(players[1]);setOverlay(0,'ONLINE','방을 만들거나 참가해');setOverlay(1,'WAITING','상대 플레이어');requestAnimationFrame(loop);
 })();
-</script>
-</body></html>
+</script></body></html>
